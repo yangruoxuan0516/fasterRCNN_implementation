@@ -115,7 +115,7 @@ def get_regression(gt_boxes, anchors_or_proposals):
     return regression_targets
     
 class RPN(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, device):
         super(RPN, self).__init__()
 
         # anchor parameters
@@ -146,6 +146,8 @@ class RPN(torch.nn.Module):
         for layer in [self.conv_layer, self.cls_layer, self.reg_layer]:
             torch.nn.init.normal_(layer.weight, std=0.01)
             torch.nn.init.constant_(layer.bias, 0)
+
+        self.device = device
         
     def generate_anchors(self, feature_map):
         # anchor for a single pixel
@@ -275,7 +277,7 @@ class RPN(torch.nn.Module):
 
         print("\n [in RPN] cls_pred.shape, reg_pred.shape", cls_pred.shape, reg_pred.shape)
         # apply regression to anchors, what we get is called proposals
-        proposals = apply_regression(reg_pred.detach().reshape(-1,1,4), anchors) # (feature_map.height * feature_map.width * 9, 1, 4)
+        proposals = apply_regression(reg_pred.detach().reshape(-1,1,4).to(self.device), anchors.to(self.device)) # (feature_map.height * feature_map.width * 9, 1, 4)
         proposals = proposals.reshape(proposals.size(0),4) # (number of anchors, 4)
                                                         # number of anchors  = number of proposals at this step
                                                         # proposals are just anchors applied regressions here
@@ -326,7 +328,7 @@ class RPN(torch.nn.Module):
 
 
 class ROIhead(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, device):
         super(ROIhead, self).__init__()
         self.in_channels = 512;
         self.num_classes = 21;
@@ -339,9 +341,10 @@ class ROIhead(torch.nn.Module):
 
         self.cls_layer = torch.nn.Linear(self.fc_dim, self.num_classes)
         self.reg_layer = torch.nn.Linear(self.fc_dim, self.num_classes * 4)
+
+        self.device = device
         
     def assign_targets(self, proposals, gt_boxes, gt_labels):
-
 
         iou_matrix = get_iou(gt_boxes, proposals)
         best_gt_for_proposal_score, best_gt_for_proposal_idx = iou_matrix.max(dim = 0)
@@ -450,7 +453,7 @@ class ROIhead(torch.nn.Module):
         frcnn_output = {}
         print("\n [in ROIhead] cls_pred.shape, reg_pred.shape", cls_pred.shape, reg_pred.shape)
         # apply regression predictions to proposals
-        pred_boxes = apply_regression(reg_pred, proposals)
+        pred_boxes = apply_regression(reg_pred.to(self.device), proposals.to(self.device))
 
         pred_scores = torch.nn.functional.softmax(cls_pred, dim = -1)
 
@@ -497,14 +500,16 @@ class ROIhead(torch.nn.Module):
 
 
 class FasterRCNN(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, device):
         super(FasterRCNN, self).__init__()
+
+        self.device = device
 
         # load models
         vgg16 = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.IMAGENET1K_V1)
         self.backbone = vgg16.features[:-1]
-        self.rpn = RPN()
-        self.roi_head = ROIhead()
+        self.rpn = RPN(device=self.device)
+        self.roi_head = ROIhead(device=self.device)
 
         # freeze the first 10 layers of the backbone
         for layer in self.backbone[:10]:
