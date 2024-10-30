@@ -54,6 +54,7 @@ class VOCDataset(Dataset):
             self.split = 'test'
             data_path = os.path.join(data_path, 'VOC2007-test')
         # self.data_path = os.path.join(data_path, 'VOC2007')
+        self.data_path = data_path
         self.annopath = os.path.join(self.data_path, 'Annotations', '%s.xml')
         self.imgpath = os.path.join(self.data_path, 'JPEGImages', '%s.jpg')
         self.imgsetpath = os.path.join(self.data_path, 'ImageSets', 'Layout', '%s.txt')
