@@ -275,7 +275,7 @@ class RPN(torch.nn.Module):
         # to ((batch_size = 1) * 9 * feature_map.height * feature_map.width, 4)
         reg_pred = reg_pred.view(reg_pred.size(0),9,4,feature_map.shape[-2],feature_map.shape[-1]).permute(0, 3, 4, 1, 2).reshape(-1, 4)
 
-        print("\n [in RPN] cls_pred.shape, reg_pred.shape", cls_pred.shape, reg_pred.shape)
+        # print("\n [in RPN] cls_pred.shape, reg_pred.shape", cls_pred.shape, reg_pred.shape)
         # apply regression to anchors, what we get is called proposals
         proposals = apply_regression(reg_pred.detach().reshape(-1,1,4).to(self.device), anchors.to(self.device)) # (feature_map.height * feature_map.width * 9, 1, 4)
         proposals = proposals.reshape(proposals.size(0),4) # (number of anchors, 4)
@@ -302,7 +302,7 @@ class RPN(torch.nn.Module):
             # for training, we don't use the entire set of anchors, but only some samples
             sampled_pos_idx_mask, sampled_neg_idx_mask = sample_pos_neg(labels_for_anchors, positive_count=128, total_count=256)
             # print the number of true values in the mask
-            print("\n [in RPN] torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask)",torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask))
+            # print("\n [in RPN] torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask)",torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask))
             # return 2 tensors, each of size = size of labels_for_anchors, with 128 True in each that marks the positive / negative anchors to be used for training
             sampled_idx = torch.where(sampled_pos_idx_mask | sampled_neg_idx_mask)[0]
 
@@ -427,7 +427,7 @@ class ROIhead(torch.nn.Module):
             sampled_pos_idx_mask, sampled_neg_idx_mask = sample_pos_neg(labels, positive_count=32, total_count=128)
 
             # print sample length
-            print("\n [in ROI head] torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask)",torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask))
+            # print("\n [in ROI head] torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask)",torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask))
 
 
             sampled_idx = torch.where(sampled_pos_idx_mask | sampled_neg_idx_mask)[0]
@@ -451,7 +451,7 @@ class ROIhead(torch.nn.Module):
         reg_pred = reg_pred.reshape(num_boxes, num_classes, 4) # (sampled_training_proposals = 128, 21, 4)
 
         frcnn_output = {}
-        print("\n [in ROIhead] cls_pred.shape, reg_pred.shape", cls_pred.shape, reg_pred.shape)
+        # print("\n [in ROIhead] cls_pred.shape, reg_pred.shape", cls_pred.shape, reg_pred.shape)
         # apply regression predictions to proposals
         pred_boxes = apply_regression(reg_pred.to(self.device), proposals.to(self.device))
 
