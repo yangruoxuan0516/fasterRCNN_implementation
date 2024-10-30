@@ -170,7 +170,7 @@ def load_model_and_dataset():
     voc = VOCDataset(split='test')
     test_dataset = DataLoader(voc, batch_size=1, shuffle=False)
     
-    faster_rcnn_model = FasterRCNN()
+    faster_rcnn_model = FasterRCNN(device)
     faster_rcnn_model.eval()
     faster_rcnn_model.to(device)
     faster_rcnn_model.load_state_dict(torch.load('/home/infres/ryang-23/fasterRCNN_implementation/result/model.pth',
