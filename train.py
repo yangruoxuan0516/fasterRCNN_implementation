@@ -46,7 +46,7 @@ def train():
     train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=4)
         
     num_epochs = config['train_param']['num_epochs']
-    num_epochs = 20
+    num_epochs = 100
     for epoch in range(num_epochs):
         model.train()
         train_bar = tqdm.tqdm(train_loader, file = sys.stdout, ncols=100)
@@ -95,9 +95,10 @@ def train():
         loss_output += 'RPN Loss: {}\n'.format(sum(losses_rpns) / len(losses_rpns))
         loss_output += 'FRCNN Loss: {}\n'.format(sum(losses_frcnns) / len(losses_frcnns))
         print(loss_output)
-    # Close interactive plotting mode
-    plt.ioff()
-    plt.show()
+    # # Close interactive plotting mode
+    # plt.ioff()
+    # plt.show()
+    print("LOSSES: ", losses)
 
 if __name__ == '__main__':
     train()
