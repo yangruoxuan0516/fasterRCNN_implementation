@@ -167,7 +167,7 @@ def load_model_and_dataset():
     if device == 'cuda':
         torch.cuda.manual_seed_all(seed)
     
-    voc = VOCDataset('test', split='test')
+    voc = VOCDataset(split='test')
     test_dataset = DataLoader(voc, batch_size=1, shuffle=False)
     
     faster_rcnn_model = FasterRCNN()
