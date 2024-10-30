@@ -173,11 +173,10 @@ def load_model_and_dataset(args):
     voc = VOCDataset('test', im_dir=dataset_config['im_test_path'], ann_dir=dataset_config['ann_test_path'])
     test_dataset = DataLoader(voc, batch_size=1, shuffle=False)
     
-    faster_rcnn_model = FasterRCNN(model_config, num_classes=dataset_config['num_classes'])
+    faster_rcnn_model = FasterRCNN(model_config)
     faster_rcnn_model.eval()
     faster_rcnn_model.to(device)
-    faster_rcnn_model.load_state_dict(torch.load(os.path.join(train_config['task_name'],
-                                                              train_config['ckpt_name']),
+    faster_rcnn_model.load_state_dict(torch.load('/home/infres/ryang-23/fasterRCNN_implementation/result/model.pth',
                                                  map_location=device))
     return faster_rcnn_model, voc, test_dataset
 
