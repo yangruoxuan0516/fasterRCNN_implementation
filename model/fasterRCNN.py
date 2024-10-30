@@ -297,7 +297,7 @@ class RPN(torch.nn.Module):
             # based on gt assignment above, get the regression targets for each anchor
             # matched_gt_boxes_for_anchors : (number of anchors, 4)
             # anchors : (number of anchors, 4)
-            regression_targets = get_regression(matched_gt_boxes_for_anchors, anchors)
+            regression_targets = get_regression(matched_gt_boxes_for_anchors.to(self.device), anchors.to(self.device))
 
             # for training, we don't use the entire set of anchors, but only some samples
             sampled_pos_idx_mask, sampled_neg_idx_mask = sample_pos_neg(labels_for_anchors, positive_count=128, total_count=256)
@@ -434,7 +434,7 @@ class ROIhead(torch.nn.Module):
             proposals = proposals[sampled_idx]
             labels = labels[sampled_idx]
             matched_gt_boxes = matched_gt_boxes[sampled_idx]
-            regression_targets = get_regression(matched_gt_boxes, proposals) # (sampled_training_proposals, 4)
+            regression_targets = get_regression(matched_gt_boxes.to(self.device), proposals.to(self.device)) # (sampled_training_proposals, 4)
             # by now we get the "reference" for trainging
             # labels and regression_targets
         
