@@ -100,6 +100,10 @@ def train():
     # plt.show()
     print("LOSSES: ", losses)
 
+    # save the model
+    torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
+    
+
 if __name__ == '__main__':
     train()
 
