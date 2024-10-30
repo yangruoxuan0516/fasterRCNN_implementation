@@ -212,7 +212,7 @@ class RPN(torch.nn.Module):
         return proposals, cls_pred
 
     def assign_targets(self, anchors, gt_boxes):
-        iou_matrix = get_iou(gt_boxes, anchors) # (number of gt_boxes, number of anchors)
+        iou_matrix = get_iou(gt_boxes.to(self.device), anchors.to(self.device)) # (number of gt_boxes, number of anchors)
 
         # for each anchor get best gt box index
         best_gt_for_anchor_score, best_gt_for_anchor_idx = iou_matrix.max(dim = 0)
@@ -346,7 +346,7 @@ class ROIhead(torch.nn.Module):
         
     def assign_targets(self, proposals, gt_boxes, gt_labels):
 
-        iou_matrix = get_iou(gt_boxes, proposals)
+        iou_matrix = get_iou(gt_boxes.to(self.device), proposals.to(self.device))
         best_gt_for_proposal_score, best_gt_for_proposal_idx = iou_matrix.max(dim = 0)
         # gives the most possible class, for each proposal
         # note that the index is the index of gt list, but not the complete 21 classes
