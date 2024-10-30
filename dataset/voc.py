@@ -42,16 +42,18 @@ VOC2007-trainval
 '''
 
 class VOCDataset(Dataset):
-    def __init__(self, data_path='/Users/ruox/Documents/master/FasterRCNN/', split='trainval'):
+    # def __init__(self, data_path='/Users/ruox/Documents/master/FasterRCNN/', split='trainval'):
+    def __init__(self, data_path='/home/infres/ryang-23/FasterRCNN-PyTorch', split='trainval'):
         # set pathes
         if split == 'trainval':
             self.split = 'trainval'
-            data_path = os.path.join(data_path, 'VOC2007-trainval')
+            # data_path = os.path.join(data_path, 'VOC2007-trainval')
             # data_path = os.path.join(data_path, 'VOC2007-trainval-petit')
+            data_path = os.path.join(data_path, 'VOC2007')
         elif split == 'test':
             self.split = 'test'
             data_path = os.path.join(data_path, 'VOC2007-test')
-        self.data_path = os.path.join(data_path, 'VOC2007')
+        # self.data_path = os.path.join(data_path, 'VOC2007')
         self.annopath = os.path.join(self.data_path, 'Annotations', '%s.xml')
         self.imgpath = os.path.join(self.data_path, 'JPEGImages', '%s.jpg')
         self.imgsetpath = os.path.join(self.data_path, 'ImageSets', 'Layout', '%s.txt')
