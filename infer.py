@@ -149,31 +149,28 @@ def compute_map(det_boxes, gt_boxes, iou_threshold=0.5, method='area'):
     return mean_ap, all_aps
 
 
-def load_model_and_dataset(args):
-    # Read the config file #
-    with open(args.config_path, 'r') as file:
-        try:
-            config = yaml.safe_load(file)
-        except yaml.YAMLError as exc:
-            print(exc)
-    print(config)
+def load_model_and_dataset():
+    # # Read the config file #
+    # with open(args.config_path, 'r') as file:
+    #     try:
+    #         config = yaml.safe_load(file)
+    #     except yaml.YAMLError as exc:
+    #         print(exc)
+    # print(config)
     ########################
     
-    dataset_config = config['dataset_params']
-    model_config = config['model_params']
-    train_config = config['train_params']
     
-    seed = train_config['seed']
+    seed = 1111
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
     if device == 'cuda':
         torch.cuda.manual_seed_all(seed)
     
-    voc = VOCDataset('test', im_dir=dataset_config['im_test_path'], ann_dir=dataset_config['ann_test_path'])
+    voc = VOCDataset('test', split='test')
     test_dataset = DataLoader(voc, batch_size=1, shuffle=False)
     
-    faster_rcnn_model = FasterRCNN(model_config)
+    faster_rcnn_model = FasterRCNN()
     faster_rcnn_model.eval()
     faster_rcnn_model.to(device)
     faster_rcnn_model.load_state_dict(torch.load('/home/infres/ryang-23/fasterRCNN_implementation/result/model.pth',
@@ -259,8 +256,8 @@ def load_model_and_dataset(args):
         # cv2.imwrite('samples/output_frcnn_{}.jpg'.format(sample_count), im)
 
 
-def evaluate_map(args):
-    faster_rcnn_model, voc, test_dataset = load_model_and_dataset(args)
+def evaluate_map():
+    faster_rcnn_model, voc, test_dataset = load_model_and_dataset()
     gts = []
     preds = []
     for im, target, fname in tqdm(test_dataset):
@@ -303,14 +300,14 @@ def evaluate_map(args):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Arguments for faster rcnn inference')
-    parser.add_argument('--config', dest='config_path',
-                        default='config/voc.yaml', type=str)
+    # parser = argparse.ArgumentParser(description='Arguments for faster rcnn inference')
+    # parser.add_argument('--config', dest='config_path',
+    #                     default='config/voc.yaml', type=str)
     # parser.add_argument('--evaluate', dest='evaluate',
     #                     default=False, type=bool)
     # parser.add_argument('--infer_samples', dest='infer_samples',
     #                     default=True, type=bool)
-    args = parser.parse_args()
+    # args = parser.parse_args()
     # if args.infer_samples:
     #     infer(args)
     # else:
@@ -320,4 +317,4 @@ if __name__ == '__main__':
     #     evaluate_map(args)
     # else:
     #     print('Not Evaluating as `evaluate` argument is False')
-    evaluate_map(args)
+    evaluate_map()
