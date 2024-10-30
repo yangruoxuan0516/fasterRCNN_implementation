@@ -88,11 +88,12 @@ def train():
             # ax.legend()
             # plt.draw()
             # plt.pause(0.01)  # Pause to allow the plot to update
+        # print the mean loss of this epoch
         loss_output = ''
-        loss_output += 'RPN Classification Loss : {:.4f}'.format(np.mean(rpn_classification_losses))
-        loss_output += ' | RPN Localization Loss : {:.4f}'.format(np.mean(rpn_localization_losses))
-        loss_output += ' | FRCNN Classification Loss : {:.4f}'.format(np.mean(frcnn_classification_losses))
-        loss_output += ' | FRCNN Localization Loss : {:.4f}'.format(np.mean(frcnn_localization_losses))
+        loss_output += 'Epoch: {}\n'.format(epoch)
+        loss_output += 'Loss: {}\n'.format(sum(losses) / len(losses))
+        loss_output += 'RPN Loss: {}\n'.format(sum(losses_rpns) / len(losses_rpns))
+        loss_output += 'FRCNN Loss: {}\n'.format(sum(losses_frcnns) / len(losses_frcnns))
         print(loss_output)
     # Close interactive plotting mode
     plt.ioff()
