@@ -40,6 +40,9 @@ def train():
     losses_rpns = []  # Track RPN loss over time
     losses_frcnns = []  # Track FRCNN loss over time
 
+    avg_losses = []
+    avg_losses_rpns = []
+    avg_losses_frcnns = []
 
     # load dataset
     train_dataset = voc.VOCDataset(split='trainval')
@@ -95,10 +98,21 @@ def train():
         loss_output += 'RPN Loss: {}\n'.format(sum(losses_rpns) / len(losses_rpns))
         loss_output += 'FRCNN Loss: {}\n'.format(sum(losses_frcnns) / len(losses_frcnns))
         print(loss_output)
+
+        avg_losses.append(sum(losses) / len(losses))
+        avg_losses_rpns.append(sum(losses_rpns) / len(losses_rpns))
+        avg_losses_frcnns.append(sum(losses_frcnns) / len(losses_frcnns))
+        losses = []
+        losses_rpns = []
+        losses_frcnns = []
+
     # # Close interactive plotting mode
     # plt.ioff()
     # plt.show()
-    print("LOSSES: ", losses)
+    print("LOSSES: ", avg_losses)
+    print("LOSSES_RPNS: ", avg_losses_rpns)
+    print("LOSSES_FRCNNS: ", avg_losses_frcnns)
+    
 
     # save the model
     torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
