@@ -5,7 +5,7 @@ import tqdm
 from torch.utils.data import DataLoader
 
 from dataset import voc
-from model import fasterRCNN
+from model.fasterRCNN import FasterRCNN
 import yaml
 
 import matplotlib.pyplot as plt
@@ -18,7 +18,7 @@ def train():
         config = yaml.safe_load(file)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = fasterRCNN.FasterRCNN(device).to(device)
+    model = FasterRCNN(device).to(device)
     # optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.001)
     optimizer = torch.optim.SGD(lr=0.001,
                                 params=filter(lambda p: p.requires_grad,

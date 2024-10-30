@@ -343,6 +343,8 @@ class ROIhead(torch.nn.Module):
         self.reg_layer = torch.nn.Linear(self.fc_dim, self.num_classes * 4)
 
         self.device = device
+
+        self.threshold = 0.05
         
     def assign_targets(self, proposals, gt_boxes, gt_labels):
 
@@ -384,7 +386,7 @@ class ROIhead(torch.nn.Module):
     
     def filter_predictions(self, pred_boxes, pred_labels, pred_scores):
         # remove low score boxes
-        keep = torch.where(pred_scores > 0.05)[0]
+        keep = torch.where(pred_scores > self.threshold)[0]
         pred_boxes = pred_boxes[keep]
         pred_labels = pred_labels[keep]
         pred_scores = pred_scores[keep]
