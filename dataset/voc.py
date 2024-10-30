@@ -4,6 +4,7 @@ from PIL import Image
 import torch
 import xml.etree.ElementTree as ET
 import torchvision
+import random
 
 '''
 VOC2007-test
@@ -115,6 +116,10 @@ class VOCDataset(Dataset):
 
         # get image
         img = Image.open(self.imgpath % img_id)
+        to_flip = False
+        if self.split == 'train' and random.random() < 0.5:
+            to_flip = True
+            im = im.transpose(Image.FLIP_LEFT_RIGHT)
         img = torchvision.transforms.ToTensor()(img)
 
         # get annotation
@@ -123,4 +128,13 @@ class VOCDataset(Dataset):
         targets['bboxes'] = torch.as_tensor([target['bbox'] for target in annotations['targets']])
         targets['labels'] = torch.as_tensor([target['label'] for target in annotations['targets']])
 
+        if to_flip:
+            for idx, box in enumerate(targets['bboxes']):
+                x1, y1, x2, y2 = box
+                w = x2-x1
+                im_w = img.shape[-1]
+                x1 = im_w - x1 - w
+                x2 = x1 + w
+                targets['bboxes'][idx] = torch.as_tensor([x1, y1, x2, y2])
+                
         return img_id, img, targets
