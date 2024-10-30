@@ -268,7 +268,7 @@ def evaluate_map():
         target_labels = target['labels'].long().to(device)[0]
         rpn_output, frcnn_output = faster_rcnn_model(im, None)
 
-        boxes = frcnn_output['boxes']
+        boxes = frcnn_output['bboxes']
         labels = frcnn_output['labels']
         scores = frcnn_output['scores']
         
