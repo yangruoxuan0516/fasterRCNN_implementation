@@ -260,8 +260,9 @@ def evaluate_map():
     faster_rcnn_model, voc, test_dataset = load_model_and_dataset()
     gts = []
     preds = []
-    for im, target, fname in tqdm(test_dataset):
-        im_name = fname
+    for one_batch in tqdm(test_dataset):
+        img_id, im, target = one_batch
+        # im_name = fname
         im = im.float().to(device)
         target_boxes = target['bboxes'].float().to(device)[0]
         target_labels = target['labels'].long().to(device)[0]
