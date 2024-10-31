@@ -189,7 +189,8 @@ def infer():
     faster_rcnn_model.roi_head.threshold = 0.7
     
     for sample_count in tqdm(range(30)):
-        random_idx = random.randint(0, len(voc))
+        # random_idx = random.randint(0, len(voc))
+        random_idx = sample_count
         img_id, im, target = voc[random_idx]
         # print(img_id)
         im = im.unsqueeze(0).float().to(device)
@@ -268,8 +269,15 @@ def evaluate_map():
 
     gts = []
     preds = []
+    stop = 0
     for one_batch in tqdm(test_dataset):
+
+        if stop == 100:
+            break
+        stop += 1
         img_id, im, target = one_batch
+        # print('img_id', img_id)
+        # print('target', target)
         # im_name = fname
         im = im.float().to(device)
         target_boxes = target['bboxes'].float().to(device)[0]
@@ -280,6 +288,11 @@ def evaluate_map():
         labels = frcnn_output['labels']
         scores = frcnn_output['scores']
         
+        # print('boxes', boxes)
+        # print('labels', labels)
+        # print('scores', scores)
+
+
         pred_boxes = {}
         gt_boxes = {}
         for label_name in voc.label2idx:
@@ -300,12 +313,18 @@ def evaluate_map():
         
         gts.append(gt_boxes)
         preds.append(pred_boxes)
+
+        print('preds', preds)
+        print('gts', gts)
    
     mean_ap, all_aps = compute_map(preds, gts, method='interp')
+
+    print('mean_ap', mean_ap)
+
     print('Class Wise Average Precisions')
     for idx in range(len(voc.idx2label)):
-        print('AP for class {} = {:.4f}'.format(voc.idx2label[idx], all_aps[voc.idx2label[idx]]))
-    print('Mean Average Precision : {:.4f}'.format(mean_ap))
+        print('AP for class {} = {:.10f}'.format(voc.idx2label[idx], all_aps[voc.idx2label[idx]]))
+    print('Mean Average Precision : {:.10f}'.format(mean_ap))
 
 
 if __name__ == '__main__':
