@@ -61,7 +61,7 @@ def train():
     train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=4)
         
     # num_epochs = config['train_param']['num_epochs']
-    num_epochs = 30
+    num_epochs = 20
     for epoch in range(num_epochs):
         model.train()
         train_bar = tqdm.tqdm(train_loader, file = sys.stdout, ncols=100)
