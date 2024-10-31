@@ -20,6 +20,8 @@ def train():
     # with open('config/voc.yaml', 'r') as file:
     #     config = yaml.safe_load(file)
 
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
     seed = 1111
     torch.manual_seed(seed)
     np.random.seed(seed)
@@ -27,7 +29,7 @@ def train():
     if device == 'cuda':
         torch.cuda.manual_seed_all(seed)
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
     model = FasterRCNN(device).to(device)
     # optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.001)
     optimizer = torch.optim.SGD(lr=0.001,
