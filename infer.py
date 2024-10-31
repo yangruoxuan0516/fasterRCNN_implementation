@@ -191,7 +191,7 @@ def infer():
     for sample_count in tqdm(range(30)):
         random_idx = random.randint(0, len(voc))
         img_id, im, target = voc[random_idx]
-        print(img_id)
+        # print(img_id)
         im = im.unsqueeze(0).float().to(device)
 
         fname = voc.imgpath % str(img_id)
@@ -326,5 +326,5 @@ if __name__ == '__main__':
     #     evaluate_map(args)
     # else:
     #     print('Not Evaluating as `evaluate` argument is False')
-    # evaluate_map()
-    infer()
+    evaluate_map()
+    # infer()
