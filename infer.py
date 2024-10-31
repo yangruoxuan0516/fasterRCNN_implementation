@@ -12,7 +12,7 @@ from torch.utils.data.dataloader import DataLoader
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-
+'''
 def get_iou(det, gt):
     det_x1, det_y1, det_x2, det_y2 = det
     gt_x1, gt_y1, gt_x2, gt_y2 = gt
@@ -147,6 +147,73 @@ def compute_map(det_boxes, gt_boxes, iou_threshold=0.5, method='area'):
     # compute mAP at provided iou threshold
     mean_ap = sum(aps) / len(aps)
     return mean_ap, all_aps
+
+'''
+
+
+
+
+# import numpy as np
+
+def calculate_iou(box1, box2):
+    # Calculate the intersection area
+    x_left = max(box1[0], box2[0])
+    y_top = max(box1[1], box2[1])
+    x_right = min(box1[2], box2[2])
+    y_bottom = min(box1[3], box2[3])
+    if x_right < x_left or y_bottom < y_top:
+        return 0.0
+    intersection_area = (x_right - x_left) * (y_bottom - y_top)
+    box1_area = (box1[2] - box1[0]) * (box1[3] - box1[1])
+    box2_area = (box2[2] - box2[0]) * (box2[3] - box2[1])
+    iou = intersection_area / float(box1_area + box2_area - intersection_area + 1e-6)
+    return iou
+
+def compute_average_precision(recall, precision):
+    recall = np.concatenate(([0.0], recall, [1.0]))
+    precision = np.concatenate(([0.0], precision, [0.0]))
+    for i in range(len(precision) - 1, 0, -1):
+        precision[i - 1] = np.maximum(precision[i - 1], precision[i])
+    indices = np.where(recall[1:] != recall[:-1])[0]
+    ap = np.sum((recall[indices + 1] - recall[indices]) * precision[indices + 1])
+    return ap
+
+def compute_map(pred_boxes, gt_boxes, iou_threshold=0.5):
+    all_aps = []
+    for cls in gt_boxes.keys():
+        predictions = sorted(pred_boxes[cls], key=lambda x: x[-1], reverse=True)
+        gt_for_class = gt_boxes[cls]
+        
+        tp = np.zeros(len(predictions))
+        fp = np.zeros(len(predictions))
+        detected = []
+        
+        for i, pred in enumerate(predictions):
+            ious = np.array([calculate_iou(pred[:4], gt) for gt in gt_for_class])
+            max_iou_idx = np.argmax(ious)
+            max_iou = ious[max_iou_idx]
+            if max_iou >= iou_threshold and max_iou_idx not in detected:
+                tp[i] = 1
+                detected.append(max_iou_idx)
+            else:
+                fp[i] = 1
+                
+        tp_cumsum = np.cumsum(tp)
+        fp_cumsum = np.cumsum(fp)
+        recalls = tp_cumsum / len(gt_for_class)
+        precisions = tp_cumsum / (tp_cumsum + fp_cumsum + 1e-6)
+        
+        ap = compute_average_precision(recalls, precisions)
+        all_aps.append(ap)
+    
+    mean_ap = np.mean(all_aps) if all_aps else 0
+    return mean_ap, all_aps
+
+
+
+
+
+
 
 
 def load_model_and_dataset():
@@ -317,7 +384,7 @@ def evaluate_map():
     print('preds', preds)
     print('gts', gts)
    
-    mean_ap, all_aps = compute_map(preds, gts, method='interp')
+    mean_ap, all_aps = compute_map(preds, gts)#, method='interp')
 
     print('mean_ap', mean_ap)
 
