@@ -20,13 +20,13 @@ def train():
     # with open('config/voc.yaml', 'r') as file:
     #     config = yaml.safe_load(file)
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 
     seed = 1111
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
-    if device == 'cuda':
+    if device == 'cuda:1':
         torch.cuda.manual_seed_all(seed)
 
 

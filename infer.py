@@ -10,7 +10,7 @@ from model.fasterRCNN import FasterRCNN
 from dataset.voc import VOCDataset
 from torch.utils.data.dataloader import DataLoader
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 
 
 def get_iou(det, gt):
@@ -165,7 +165,7 @@ def load_model_and_dataset():
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
-    if device == 'cuda':
+    if device == 'cuda:1':
         torch.cuda.manual_seed_all(seed)
     
     voc = VOCDataset(split='test')
