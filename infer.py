@@ -272,7 +272,7 @@ def evaluate_map():
     stop = 0
     for one_batch in tqdm(test_dataset):
 
-        if stop == 100:
+        if stop == 1000:
             break
         stop += 1
         img_id, im, target = one_batch
