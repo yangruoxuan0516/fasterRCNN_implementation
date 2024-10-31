@@ -314,8 +314,8 @@ def evaluate_map():
         gts.append(gt_boxes)
         preds.append(pred_boxes)
 
-        print('preds', preds)
-        print('gts', gts)
+    print('preds', preds)
+    print('gts', gts)
    
     mean_ap, all_aps = compute_map(preds, gts, method='interp')
 
