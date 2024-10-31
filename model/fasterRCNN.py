@@ -4,6 +4,8 @@ import torchvision
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
+import math
+
 def get_iou(boxes1,boxes2):
     # boxes1 : (number of boxes1, 4)
     # boxes2 : (number of boxes2, 4)
@@ -59,11 +61,15 @@ def apply_regression(reg_pred, anchors_or_proposals):
     ctr_x = anchors_or_proposals[:,0] + 0.5 * w # (number of anchors = 38 * 50 * 9 = 17100,)
     ctr_y = anchors_or_proposals[:,1] + 0.5 * h # (number of anchors = 38 * 50 * 9 = 17100,)
 
+
     dx = reg_pred[...,0] # takes the 0th element of the last dimension,  
                             # (number of anchors = batch_size * (9 * 38 * 50 = 17100), 1,)
     dy = reg_pred[...,1] # (number of anchors = batch_size * (9 * 38 * 50 = 17100), 1,)
     dw = reg_pred[...,2] # (number of anchors = batch_size * (9 * 38 * 50 = 17100), 1,)
     dh = reg_pred[...,3] # (number of anchors = batch_size * (9 * 38 * 50 = 17100), 1,)
+
+    dw = torch.clamp(dw, max=math.log(1000.0 / 16))
+    dh = torch.clamp(dh, max=math.log(1000.0 / 16))
 
     pred_ctr_x = dx * w[:, None] + ctr_x[:, None] # result = [[(dx[0] * w[0]) + ctr_x[0]],
                                                     #           [(dx[1] * w[1]) + ctr_x[1]],
@@ -80,7 +86,7 @@ def apply_regression(reg_pred, anchors_or_proposals):
     pred_x2 = pred_ctr_x + 0.5 * pred_w # (number of anchors = 38 * 50 * 9 = 17100, 1,)
     pred_y2 = pred_ctr_y + 0.5 * pred_h # (number of anchors = 38 * 50 * 9 = 17100, 1,)
 
-    pred_boxes = torch.stack([pred_x1, pred_y1, pred_x2, pred_y2], dim = 2) # (number of anchors = 38 * 50 * 9 = 17100, 1, 4)
+    pred_boxes = torch.stack((pred_x1, pred_y1, pred_x2, pred_y2), dim = 2) # (number of anchors = 38 * 50 * 9 = 17100, 1, 4)
 
     return pred_boxes
 
@@ -89,7 +95,7 @@ def clamp_boxes(boxes, img_shape):
     boxes_y1 = boxes[..., 1].clamp(min = 0, max = img_shape[-2]) # (10000,)
     boxes_x2 = boxes[..., 2].clamp(min = 0, max = img_shape[-1]) # (10000,)
     boxes_y2 = boxes[..., 3].clamp(min = 0, max = img_shape[-2]) # (10000,)
-    boxes = torch.cat([boxes_x1[...,None], boxes_y1[...,None], boxes_x2[...,None], boxes_y2[...,None]], dim = -1) # (10000, 4)
+    boxes = torch.cat((boxes_x1[...,None], boxes_y1[...,None], boxes_x2[...,None], boxes_y2[...,None]), dim = -1) # (10000, 4)
     return boxes
 
 def get_regression(gt_boxes, anchors_or_proposals):
@@ -131,7 +137,7 @@ class RPN(torch.nn.Module):
         
         # 1*1 conv layer with 18 filters, 18 = 2 (forground / background) * 9 (number of anchors)
         self.cls_layer = torch.nn.Conv2d(in_channels = 512, 
-                                    out_channels = 18, 
+                                    out_channels = 9, 
                                     kernel_size = 1, 
                                     stride = 1, 
                                     padding = 0)
@@ -188,30 +194,31 @@ class RPN(torch.nn.Module):
 
     def filter_proposals(self, proposals, cls_pred, img_shape):
 
-        cls_pred = cls_pred.reshape(-1,2) # ((batch_size = 1) * feature_map.height * feature_map.width * 9 * 2)
-        cls_pred = cls_pred[:,1]
+        # cls_pred = cls_pred.reshape(-1,2) # ((batch_size = 1) * feature_map.height * feature_map.width * 9 * 2)
+        # cls_pred = cls_pred[:,1]
+        cls_pred = cls_pred.reshape(-1)
         cls_pred = torch.sigmoid(cls_pred) # ((batch_size = 1) * feature_map.height * feature_map.width * 9 * 2)
                                            # sigmoid is used to convert the output to a probability
 
-        if self.training:
-            # choose only the proposals that doesn't cross the image boundary
-            img_height, img_width = img_shape
+        # if self.training:
+        #     # choose only the proposals that doesn't cross the image boundary
+        #     img_height, img_width = img_shape
         
-            # Create a mask for valid proposals
-            valid_mask = (
-                (proposals[:, 0] >= 0) &           # x1 >= 0
-                (proposals[:, 1] >= 0) &           # y1 >= 0
-                (proposals[:, 2] <= img_width) &   # x2 <= image width
-                (proposals[:, 3] <= img_height)    # y2 <= image height
-            )
+        #     # Create a mask for valid proposals
+        #     valid_mask = (
+        #         (proposals[:, 0] >= 0) &           # x1 >= 0
+        #         (proposals[:, 1] >= 0) &           # y1 >= 0
+        #         (proposals[:, 2] <= img_width) &   # x2 <= image width
+        #         (proposals[:, 3] <= img_height)    # y2 <= image height
+        #     )
             
-            # Apply the mask to filter proposals and class predictions
-            proposals = proposals[valid_mask]
-            cls_pred = cls_pred[valid_mask]
+        #     # Apply the mask to filter proposals and class predictions
+        #     proposals = proposals[valid_mask]
+        #     cls_pred = cls_pred[valid_mask]
 
 
         if self.training:
-            prenms_topk = 10000
+            prenms_topk = 12000
             topk = 2000
         else:
             prenms_topk = 6000
@@ -222,17 +229,32 @@ class RPN(torch.nn.Module):
         cls_pred = cls_pred[top_n_idx] # (10000,)
         proposals = proposals[top_n_idx] # (10000, 4)
 
-        if not self.training:
-            # clamp the proposals
-            proposals = clamp_boxes(proposals, img_shape[-2:]) # (10000, 4)
+        # if not self.training:
+        #     # clamp the proposals
+        #     proposals = clamp_boxes(proposals, img_shape[-2:]) # (10000, 4)
+        proposals = clamp_boxes(proposals, img_shape[-2:]) # (10000, 4)
 
-        # [TODO] remove the super small boxes, cf 知乎专栏
+        # remove the super small boxes, cf 知乎专栏
+        min_size = 16
+        ws, hs = proposals[:, 2] - proposals[:, 0], proposals[:, 3] - proposals[:, 1]
+        keep = (ws >= min_size) & (hs >= min_size)
+        keep = torch.where(keep)[0]
+        proposals = proposals[keep]
+        cls_scores = cls_scores[keep]
 
         # NMS based on objectness score
         # Non-Maximum Suppression, 非极大值抑制, 删除重叠过多的候选框
         keep_mask = torch.zeros_like(cls_pred, dtype = torch.bool) # (10000,) A boolean mask initialized to False values
         keep_indices = torchvision.ops.nms(proposals, cls_pred, 0.7) # The indices of the proposals that survived non-maximum suppression
+        
+        # because of this ??
+        keep_mask[keep_indices] = True
+        keep_indices = torch.where(keep_mask)[0]
+
+
         keep_indices_after_nms = keep_indices[cls_pred[keep_indices].sort(descending = True)[1]]
+        
+        
         proposals = proposals[keep_indices_after_nms[:topk]]
         cls_pred = cls_pred[keep_indices_after_nms[:topk]]
 
@@ -369,6 +391,13 @@ class ROIhead(torch.nn.Module):
         self.cls_layer = torch.nn.Linear(self.fc_dim, self.num_classes)
         self.reg_layer = torch.nn.Linear(self.fc_dim, self.num_classes * 4)
 
+
+        torch.nn.init.normal_(self.cls_layer.weight, std=0.01)
+        torch.nn.init.constant_(self.cls_layer.bias, 0)
+
+        torch.nn.init.normal_(self.bbox_reg_layer.weight, std=0.001)
+        torch.nn.init.constant_(self.bbox_reg_layer.bias, 0)
+
         self.device = device
 
         self.threshold = 0.05
@@ -382,26 +411,26 @@ class ROIhead(torch.nn.Module):
         # thus it goes from 0 to number of gt_boxes - 1, with the latter up to 20
 
         # As in [9], we take ... that have IoU overlap with a groundtruth bounding box of at least 0.5
-        fg_idx = best_gt_for_proposal_score >= 0.5
+        # fg_idx = best_gt_for_proposal_score >= 0.5
         # The lower threshold of 0.1 appears to act as a heuristic for hard example mining
         bg_idx = (best_gt_for_proposal_score < 0.5) & (best_gt_for_proposal_score >= 0.0)
         neither_idx = best_gt_for_proposal_score < 0.0
 
         # we keep these negative, in order to use best_gt_for_proposal_idx 
         # which goes from 0 to maybe 20, to label the proposals
-        best_gt_for_proposal_idx[bg_idx] = -1
-        best_gt_for_proposal_idx[neither_idx] = -2
+        # best_gt_for_proposal_idx[bg_idx] = -1
+        # best_gt_for_proposal_idx[neither_idx] = -2
 
         # by using clamp, the bg and neither are labeled as the first fg in gt_labels
         # but now everything goes from 1 to upper
         labels = gt_labels[best_gt_for_proposal_idx.clamp(min=0)]
-        labels = labels.to(torch.float32)
+        labels = labels.to(torch.int64)
         # we set bg to 0
-        bg_proposals = best_gt_for_proposal_idx == -1
-        labels[bg_proposals] = 0.0
+        # bg_proposals = best_gt_for_proposal_idx == -1
+        labels[bg_idx] = 0.0
         # and neither to -1
-        neither_proposals = best_gt_for_proposal_idx == -2
-        labels[neither_proposals] = -1.0
+        # neither_proposals = best_gt_for_proposal_idx == -2
+        labels[neither_idx] = -1.0
 
         # same as in "labels = gt_labels[best_gt_for_proposal_idx.clamp(min=0)]"
         # we assign gt_boxes even to bg and neither
@@ -419,7 +448,7 @@ class ROIhead(torch.nn.Module):
         pred_scores = pred_scores[keep]
 
         # remove small boxes
-        min_size = 1
+        min_size = 16
         w = pred_boxes[:,2] - pred_boxes[:,0]
         h = pred_boxes[:,3] - pred_boxes[:,1]
         keep = torch.where((w >= min_size) & (h >= min_size))[0]
@@ -444,6 +473,10 @@ class ROIhead(torch.nn.Module):
 
     def forward(self, feature_map, proposals, image_shape, targets):
         if self.training and targets is not None:
+            # because of this ??
+            proposals = torch.cat([proposals, targets['bboxes'][0]], dim=0)
+
+
             gt_boxes = targets['bboxes'][0]
             gt_labels = targets['labels'][0]
 
@@ -601,7 +634,7 @@ class FasterRCNN(torch.nn.Module):
         boxes = torch.stack((x_min, y_min, x_max, y_max), dim = 1)
         return boxes
 
-
+    '''
     def draw_proposals_on_image(self, img, proposals, target_boxes, string, id_img):
         classes = [
             'person', 'bird', 'cat', 'cow', 'dog', 'horse', 'sheep',
@@ -653,7 +686,7 @@ class FasterRCNN(torch.nn.Module):
 
         plt.savefig(string+str(id_img[0])+".png")
         plt.close(fig)
-
+    '''
 
     def forward(self, img, targets = None, img_id = 0):
         old_shape = img.shape[-2:]
