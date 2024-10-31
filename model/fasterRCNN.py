@@ -240,7 +240,7 @@ class RPN(torch.nn.Module):
         keep = (ws >= min_size) & (hs >= min_size)
         keep = torch.where(keep)[0]
         proposals = proposals[keep]
-        cls_scores = cls_scores[keep]
+        cls_pred = cls_pred[keep]
 
         # NMS based on objectness score
         # Non-Maximum Suppression, 非极大值抑制, 删除重叠过多的候选框
