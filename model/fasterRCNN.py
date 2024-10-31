@@ -187,6 +187,12 @@ class RPN(torch.nn.Module):
         ### the anchors are not at the center !! (cf 13:54)
 
     def filter_proposals(self, proposals, cls_pred, img_shape):
+
+        cls_pred = cls_pred.reshape(-1,2) # ((batch_size = 1) * feature_map.height * feature_map.width * 9 * 2)
+        cls_pred = cls_pred[:,1]
+        cls_pred = torch.sigmoid(cls_pred) # ((batch_size = 1) * feature_map.height * feature_map.width * 9 * 2)
+                                           # sigmoid is used to convert the output to a probability
+
         if self.training:
             # choose only the proposals that doesn't cross the image boundary
             img_height, img_width = img_shape
@@ -211,10 +217,6 @@ class RPN(torch.nn.Module):
             prenms_topk = 6000
             topk = 300
 
-        cls_pred = cls_pred.reshape(-1,2) # ((batch_size = 1) * feature_map.height * feature_map.width * 9 * 2)
-        cls_pred = cls_pred[:,1]
-        cls_pred = torch.sigmoid(cls_pred) # ((batch_size = 1) * feature_map.height * feature_map.width * 9 * 2)
-                                           # sigmoid is used to convert the output to a probability
         _, top_n_idx = torch.topk(cls_pred, min(prenms_topk,len(cls_pred))) # (10000,)
                                                    # topk returns (values, indices)
         cls_pred = cls_pred[top_n_idx] # (10000,)
