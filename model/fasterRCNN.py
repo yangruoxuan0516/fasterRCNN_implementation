@@ -395,8 +395,8 @@ class ROIhead(torch.nn.Module):
         torch.nn.init.normal_(self.cls_layer.weight, std=0.01)
         torch.nn.init.constant_(self.cls_layer.bias, 0)
 
-        torch.nn.init.normal_(self.bbox_reg_layer.weight, std=0.001)
-        torch.nn.init.constant_(self.bbox_reg_layer.bias, 0)
+        torch.nn.init.normal_(self.reg_layer.weight, std=0.001)
+        torch.nn.init.constant_(self.reg_layer.bias, 0)
 
         self.device = device
 
