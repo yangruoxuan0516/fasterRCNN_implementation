@@ -187,11 +187,18 @@ class RPN(torch.nn.Module):
         ### the anchors are not at the center !! (cf 13:54)
 
     def filter_proposals(self, proposals, cls_pred, img_shape):
+        if self.training:
+            prenms_topk = 10000
+            topk = 2000
+        else:
+            prenms_topk = 6000
+            topk = 300
+
         cls_pred = cls_pred.reshape(-1,2) # ((batch_size = 1) * feature_map.height * feature_map.width * 9 * 2)
         cls_pred = cls_pred[:,1]
         cls_pred = torch.sigmoid(cls_pred) # ((batch_size = 1) * feature_map.height * feature_map.width * 9 * 2)
                                            # sigmoid is used to convert the output to a probability
-        _, top_n_idx = torch.topk(cls_pred, 10000) # (10000,)
+        _, top_n_idx = torch.topk(cls_pred, min(prenms_topk,len(cls_pred))) # (10000,)
                                                    # topk returns (values, indices)
         cls_pred = cls_pred[top_n_idx] # (10000,)
         proposals = proposals[top_n_idx] # (10000, 4)
@@ -206,8 +213,8 @@ class RPN(torch.nn.Module):
         keep_mask = torch.zeros_like(cls_pred, dtype = torch.bool) # (10000,) A boolean mask initialized to False values
         keep_indices = torchvision.ops.nms(proposals, cls_pred, 0.7) # The indices of the proposals that survived non-maximum suppression
         keep_indices_after_nms = keep_indices[cls_pred[keep_indices].sort(descending = True)[1]]
-        proposals = proposals[keep_indices_after_nms[:2000]]
-        cls_pred = cls_pred[keep_indices_after_nms[:2000]]
+        proposals = proposals[keep_indices_after_nms[:topk]]
+        cls_pred = cls_pred[keep_indices_after_nms[:topk]]
 
         return proposals, cls_pred
 
