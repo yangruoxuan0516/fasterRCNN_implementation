@@ -12,7 +12,7 @@ from torch.utils.data.dataloader import DataLoader
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-'''
+
 def get_iou(det, gt):
     det_x1, det_y1, det_x2, det_y2 = det
     gt_x1, gt_y1, gt_x2, gt_y2 = gt
@@ -147,99 +147,6 @@ def compute_map(det_boxes, gt_boxes, iou_threshold=0.5, method='area'):
     # compute mAP at provided iou threshold
     mean_ap = sum(aps) / len(aps)
     return mean_ap, all_aps
-
-'''
-
-
-
-
-# import numpy as np
-
-def calculate_iou(box1, box2):
-    x_left = max(box1[0], box2[0])
-    y_top = max(box1[1], box2[1])
-    x_right = min(box1[2], box2[2])
-    y_bottom = min(box1[3], box2[3])
-    if x_right < x_left or y_bottom < y_top:
-        return 0.0
-    intersection_area = (x_right - x_left) * (y_bottom - y_top)
-    box1_area = (box1[2] - box1[0]) * (box1[3] - box1[1])
-    box2_area = (box2[2] - box2[0]) * (box2[3] - box2[1])
-    iou = intersection_area / float(box1_area + box2_area - intersection_area + 1e-6)
-    return iou
-
-def compute_map(det_boxes, gt_boxes, iou_threshold=0.5, method='area'):
-    all_aps = []
-
-    # Extract unique class labels from ground truth
-    gt_labels = {cls_key for im_gt in gt_boxes for cls_key in im_gt.keys()}
-    gt_labels = sorted(gt_labels)
-
-    # Compute AP for each class
-    for label in gt_labels:
-        cls_dets = [
-            (im_idx, det) 
-            for im_idx, im_dets in enumerate(det_boxes)
-            if label in im_dets for det in im_dets[label]
-        ]
-        
-        # Sort detections by confidence score in descending order
-        cls_dets = sorted(cls_dets, key=lambda x: -x[1][-1])
-
-        # Ground truth and matching tracking
-        gt_matched = [[False] * len(im_gt.get(label, [])) for im_gt in gt_boxes]
-        num_gts = sum(len(im_gt.get(label, [])) for im_gt in gt_boxes)
-        tp = np.zeros(len(cls_dets))
-        fp = np.zeros(len(cls_dets))
-
-        for i, (im_idx, det) in enumerate(cls_dets):
-            max_iou = 0
-            max_iou_idx = -1
-            for j, gt_box in enumerate(gt_boxes[im_idx].get(label, [])):
-                iou = calculate_iou(det[:4], gt_box)
-                if iou > max_iou:
-                    max_iou = iou
-                    max_iou_idx = j
-            
-            if max_iou >= iou_threshold and not gt_matched[im_idx][max_iou_idx]:
-                tp[i] = 1
-                gt_matched[im_idx][max_iou_idx] = True
-            else:
-                fp[i] = 1
-        
-        # Compute precision-recall curve
-        tp_cumsum = np.cumsum(tp)
-        fp_cumsum = np.cumsum(fp)
-        recalls = tp_cumsum / num_gts if num_gts > 0 else np.zeros_like(tp_cumsum)
-        precisions = tp_cumsum / np.maximum(tp_cumsum + fp_cumsum, np.finfo(np.float32).eps)
-
-        # Calculate AP based on method
-        if method == 'area':
-            recalls = np.concatenate(([0.0], recalls, [1.0]))
-            precisions = np.concatenate(([0.0], precisions, [0.0]))
-            for j in range(len(precisions) - 1, 0, -1):
-                precisions[j - 1] = np.maximum(precisions[j - 1], precisions[j])
-            ap = np.sum((recalls[1:] - recalls[:-1]) * precisions[1:])
-        elif method == 'interp':
-            ap = 0.0
-            for interp_pt in np.arange(0, 1.1, 0.1):
-                prec_interp = precisions[recalls >= interp_pt]
-                ap += prec_interp.max() if prec_interp.size > 0 else 0.0
-            ap /= 11.0
-        else:
-            raise ValueError("Method can only be 'area' or 'interp'")
-        
-        all_aps.append(ap)
-
-    # Calculate mean AP over all classes
-    mean_ap = np.mean(all_aps) if all_aps else 0
-    return mean_ap, {label: ap for label, ap in zip(gt_labels, all_aps)}
-
-
-
-
-
-
 
 
 
