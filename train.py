@@ -14,8 +14,8 @@ from torch.optim.lr_scheduler import MultiStepLR
 
 def train():
     # Load the YAML configuration
-    with open('config/voc.yaml', 'r') as file:
-        config = yaml.safe_load(file)
+    # with open('config/voc.yaml', 'r') as file:
+    #     config = yaml.safe_load(file)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = FasterRCNN(device).to(device)
@@ -48,8 +48,8 @@ def train():
     train_dataset = voc.VOCDataset(split='trainval')
     train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=4)
         
-    num_epochs = config['train_param']['num_epochs']
-    num_epochs = 300
+    # num_epochs = config['train_param']['num_epochs']
+    num_epochs = 100
     for epoch in range(num_epochs):
         model.train()
         train_bar = tqdm.tqdm(train_loader, file = sys.stdout, ncols=100)
@@ -112,7 +112,7 @@ def train():
     print("LOSSES: ", avg_losses)
     print("LOSSES_RPNS: ", avg_losses_rpns)
     print("LOSSES_FRCNNS: ", avg_losses_frcnns)
-    
+
 
     # save the model
     torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))

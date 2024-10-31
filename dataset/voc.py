@@ -49,24 +49,18 @@ class VOCDataset(Dataset):
         if split == 'trainval':
             self.split = 'trainval'
             # data_path = os.path.join(data_path, 'VOC2007-trainval')
-            # data_path = os.path.join(data_path, 'VOC2007-trainval-petit')
             data_path = os.path.join(data_path, 'VOC2007')
         elif split == 'test':
             self.split = 'test'
             data_path = os.path.join(data_path, 'VOC2007-test')
-        # self.data_path = os.path.join(data_path, 'VOC2007')
+        # data_path = os.path.join(data_path, 'VOC2007')
         self.data_path = data_path
         self.annopath = os.path.join(self.data_path, 'Annotations', '%s.xml')
         self.imgpath = os.path.join(self.data_path, 'JPEGImages', '%s.jpg')
-        self.imgsetpath = os.path.join(self.data_path, 'ImageSets', 'Layout', '%s.txt')
-        # self.imgsetpath = os.path.join(self.data_path, 'ImageSets', 'Main', 'dog_%s.txt')
+        self.imgsetpath = os.path.join(self.data_path, 'ImageSets', 'Main', '%s.txt')
 
         # get image ids
         self.ids = list()
-        # for line in open(self.imgsetpath % self.split):
-        #     part1, part2 = line.strip().split()
-        #     if part2 == '1':
-        #         self.ids.append(part1)
         for line in open(self.imgsetpath % self.split):
             self.ids.append(line.strip())
 
@@ -136,5 +130,5 @@ class VOCDataset(Dataset):
                 x1 = im_w - x1 - w
                 x2 = x1 + w
                 targets['bboxes'][idx] = torch.as_tensor([x1, y1, x2, y2])
-                
+
         return img_id, img, targets

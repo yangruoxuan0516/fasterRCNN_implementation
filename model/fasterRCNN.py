@@ -313,8 +313,8 @@ class RPN(torch.nn.Module):
 
             localization_loss = (
                 torch.nn.functional.smooth_l1_loss(
-                    reg_pred[sampled_idx],
-                    regression_targets[sampled_idx],
+                    reg_pred[sampled_pos_idx_mask],
+                    regression_targets[sampled_pos_idx_mask],
                     beta = 1/9,
                     reduction='sum',
                 ) / (sampled_idx.numel())
