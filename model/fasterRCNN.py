@@ -188,6 +188,23 @@ class RPN(torch.nn.Module):
 
     def filter_proposals(self, proposals, cls_pred, img_shape):
         if self.training:
+            # choose only the proposals that doesn't cross the image boundary
+            img_height, img_width = img_shape
+        
+            # Create a mask for valid proposals
+            valid_mask = (
+                (proposals[:, 0] >= 0) &           # x1 >= 0
+                (proposals[:, 1] >= 0) &           # y1 >= 0
+                (proposals[:, 2] <= img_width) &   # x2 <= image width
+                (proposals[:, 3] <= img_height)    # y2 <= image height
+            )
+            
+            # Apply the mask to filter proposals and class predictions
+            proposals = proposals[valid_mask]
+            cls_pred = cls_pred[valid_mask]
+
+
+        if self.training:
             prenms_topk = 10000
             topk = 2000
         else:
@@ -203,8 +220,9 @@ class RPN(torch.nn.Module):
         cls_pred = cls_pred[top_n_idx] # (10000,)
         proposals = proposals[top_n_idx] # (10000, 4)
 
-        # clamp the proposals
-        proposals = clamp_boxes(proposals, img_shape[-2:]) # (10000, 4)
+        if not self.training:
+            # clamp the proposals
+            proposals = clamp_boxes(proposals, img_shape[-2:]) # (10000, 4)
 
         # [TODO] remove the super small boxes, cf 知乎专栏
 
@@ -578,7 +596,7 @@ class FasterRCNN(torch.nn.Module):
         x_max = x_max * ratio_width
         y_min = y_min * ratio_height
         y_max = y_max * ratio_height
-        boxes = torch.stack([x_min, y_min, x_max, y_max], dim = 1)
+        boxes = torch.stack((x_min, y_min, x_max, y_max), dim = 1)
         return boxes
 
 

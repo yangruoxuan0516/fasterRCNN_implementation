@@ -12,10 +12,20 @@ import matplotlib.pyplot as plt
 
 from torch.optim.lr_scheduler import MultiStepLR
 
+import numpy as np
+import random
+
 def train():
     # Load the YAML configuration
     # with open('config/voc.yaml', 'r') as file:
     #     config = yaml.safe_load(file)
+
+    seed = 1111
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    if device == 'cuda':
+        torch.cuda.manual_seed_all(seed)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = FasterRCNN(device).to(device)
