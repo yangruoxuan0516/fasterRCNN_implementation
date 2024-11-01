@@ -60,8 +60,12 @@ def train():
     train_dataset = voc.VOCDataset(split='trainval')
     train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=4)
         
+
+    acc_steps = 5
+    step_count = 1
+
     # num_epochs = config['train_param']['num_epochs']
-    num_epochs = 20
+    num_epochs = 35
     for epoch in range(num_epochs):
         model.train()
         optimizer.zero_grad()
@@ -85,9 +89,13 @@ def train():
             losses_frcnns.append(frcnn_loss.item())
 
             # backward
+
+            loss = loss / acc_steps
             loss.backward()
-            optimizer.step()
-            optimizer.zero_grad()
+            if step_count % acc_steps == 0:
+                optimizer.step()
+                optimizer.zero_grad()
+            step_count += 1
             
 
             # id = int(id[0])
@@ -105,6 +113,8 @@ def train():
             # plt.draw()
             # plt.pause(0.01)  # Pause to allow the plot to update
         # print the mean loss of this epoch
+        optimizer.step()
+        optimizer.zero_grad()
         scheduler.step()
         loss_output = ''
         loss_output += 'Epoch: {}\n'.format(epoch)

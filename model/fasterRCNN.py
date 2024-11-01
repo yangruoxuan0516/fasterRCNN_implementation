@@ -201,21 +201,21 @@ class RPN(torch.nn.Module):
         cls_pred = torch.sigmoid(cls_pred) # ((batch_size = 1) * feature_map.height * feature_map.width * 9 * 2)
                                            # sigmoid is used to convert the output to a probability
 
-        if self.training:
-            # choose only the proposals that doesn't cross the image boundary
-            img_height, img_width = img_shape
+        # if self.training:
+        #     # choose only the proposals that doesn't cross the image boundary
+        #     img_height, img_width = img_shape
         
-            # Create a mask for valid proposals
-            valid_mask = (
-                (proposals[:, 0] >= 0) &           # x1 >= 0
-                (proposals[:, 1] >= 0) &           # y1 >= 0
-                (proposals[:, 2] <= img_width) &   # x2 <= image width
-                (proposals[:, 3] <= img_height)    # y2 <= image height
-            )
+        #     # Create a mask for valid proposals
+        #     valid_mask = (
+        #         (proposals[:, 0] >= 0) &           # x1 >= 0
+        #         (proposals[:, 1] >= 0) &           # y1 >= 0
+        #         (proposals[:, 2] <= img_width) &   # x2 <= image width
+        #         (proposals[:, 3] <= img_height)    # y2 <= image height
+        #     )
             
-            # Apply the mask to filter proposals and class predictions
-            proposals = proposals[valid_mask]
-            cls_pred = cls_pred[valid_mask]
+        #     # Apply the mask to filter proposals and class predictions
+        #     proposals = proposals[valid_mask]
+        #     cls_pred = cls_pred[valid_mask]
 
 
         if self.training:
@@ -383,17 +383,17 @@ class ROIhead(torch.nn.Module):
         self.in_channels = 512;
         self.num_classes = 21;
         self.pool_size = 7;
-        # self.fc_dim = 1024; # fc stands for fully connected
-        self.fc_dim = 4096  # to match the dimensions of VGG fc6 and fc7 layers
+        self.fc_dim = 1024; # fc stands for fully connected
+        # self.fc_dim = 4096  # to match the dimensions of VGG fc6 and fc7 layers
     
         # # [TODO] cf. Fast RCNN 3.1. Truncated SVD for faster detection
-        # self.fc6 = torch.nn.Linear(self.in_channels * self.pool_size * self.pool_size, self.fc_dim)
-        # self.fc7 = torch.nn.Linear(self.fc_dim, self.fc_dim)
+        self.fc6 = torch.nn.Linear(self.in_channels * self.pool_size * self.pool_size, self.fc_dim)
+        self.fc7 = torch.nn.Linear(self.fc_dim, self.fc_dim)
 
         # Load pretrained VGG16 and extract fc6 and fc7
-        vgg16 = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.IMAGENET1K_V1)
-        self.fc6 = vgg16.classifier[0]  # Pretrained fc6 from VGG
-        self.fc7 = vgg16.classifier[3]  # Pretrained fc7 from VGG
+        # vgg16 = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.IMAGENET1K_V1)
+        # self.fc6 = vgg16.classifier[0]  # Pretrained fc6 from VGG
+        # self.fc7 = vgg16.classifier[3]  # Pretrained fc7 from VGG
 
         self.cls_layer = torch.nn.Linear(self.fc_dim, self.num_classes)
         self.reg_layer = torch.nn.Linear(self.fc_dim, self.num_classes * 4)
@@ -467,7 +467,7 @@ class ROIhead(torch.nn.Module):
         keep_mask = torch.zeros_like(pred_scores, dtype = torch.bool)
         for cls_id in torch.unique(pred_labels):
             curr_idx = torch.where(pred_labels == cls_id)[0]
-            curr_keep = torchvision.ops.nms(pred_boxes[curr_idx], pred_scores[curr_idx], 0.3)
+            curr_keep = torchvision.ops.nms(pred_boxes[curr_idx], pred_scores[curr_idx], 0.5)
             keep_mask[curr_idx[curr_keep]] = True
         keep_idx = torch.where(keep_mask)[0]
         keep_idx_after_nms = keep_idx[pred_scores[keep_idx].sort(descending = True)[1]]
