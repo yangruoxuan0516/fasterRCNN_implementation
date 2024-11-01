@@ -201,21 +201,21 @@ class RPN(torch.nn.Module):
         cls_pred = torch.sigmoid(cls_pred) # ((batch_size = 1) * feature_map.height * feature_map.width * 9 * 2)
                                            # sigmoid is used to convert the output to a probability
 
-        # if self.training:
-        #     # choose only the proposals that doesn't cross the image boundary
-        #     img_height, img_width = img_shape
+        if self.training:
+            # choose only the proposals that doesn't cross the image boundary
+            img_height, img_width = img_shape
         
-        #     # Create a mask for valid proposals
-        #     valid_mask = (
-        #         (proposals[:, 0] >= 0) &           # x1 >= 0
-        #         (proposals[:, 1] >= 0) &           # y1 >= 0
-        #         (proposals[:, 2] <= img_width) &   # x2 <= image width
-        #         (proposals[:, 3] <= img_height)    # y2 <= image height
-        #     )
+            # Create a mask for valid proposals
+            valid_mask = (
+                (proposals[:, 0] >= 0) &           # x1 >= 0
+                (proposals[:, 1] >= 0) &           # y1 >= 0
+                (proposals[:, 2] <= img_width) &   # x2 <= image width
+                (proposals[:, 3] <= img_height)    # y2 <= image height
+            )
             
-        #     # Apply the mask to filter proposals and class predictions
-        #     proposals = proposals[valid_mask]
-        #     cls_pred = cls_pred[valid_mask]
+            # Apply the mask to filter proposals and class predictions
+            proposals = proposals[valid_mask]
+            cls_pred = cls_pred[valid_mask]
 
 
         if self.training:
