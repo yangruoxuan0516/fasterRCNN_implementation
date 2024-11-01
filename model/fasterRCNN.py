@@ -420,8 +420,8 @@ class ROIhead(torch.nn.Module):
         # As in [9], we take ... that have IoU overlap with a groundtruth bounding box of at least 0.5
         # fg_idx = best_gt_for_proposal_score >= 0.5
         # The lower threshold of 0.1 appears to act as a heuristic for hard example mining
-        bg_idx = (best_gt_for_proposal_score < 0.5) & (best_gt_for_proposal_score >= 0.0)
-        neither_idx = best_gt_for_proposal_score < 0.0
+        bg_idx = (best_gt_for_proposal_score < 0.5) & (best_gt_for_proposal_score >= 0.1)
+        neither_idx = best_gt_for_proposal_score < 0.1
 
         # we keep these negative, in order to use best_gt_for_proposal_idx 
         # which goes from 0 to maybe 20, to label the proposals
