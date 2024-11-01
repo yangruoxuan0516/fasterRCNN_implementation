@@ -514,33 +514,6 @@ class ROIhead(torch.nn.Module):
         reg_pred = reg_pred.reshape(num_boxes, num_classes, 4) # (sampled_training_proposals = 128, 21, 4)
 
         frcnn_output = {}
-        # print("\n [in ROIhead] cls_pred.shape, reg_pred.shape", cls_pred.shape, reg_pred.shape)
-        # apply regression predictions to proposals
-        pred_boxes = apply_regression(reg_pred.to(self.device), proposals.to(self.device))
-
-        pred_scores = torch.nn.functional.softmax(cls_pred, dim = -1)
-
-        # clamp boxes to image boundary
-        pred_boxes = clamp_boxes(pred_boxes, image_shape)
-
-        # create labels for each prediction
-        pred_labels = torch.arange(num_classes, device = cls_pred.device).view(1, -1).expand_as(cls_pred)
-
-        # remove background class predictions
-        pred_boxes = pred_boxes[:,1:] # (number_proposals = 128, 20, 4)
-        pred_scores = pred_scores[:,1:]
-        pred_labels = pred_labels[:,1:]
-
-        # batch everything by making every class prediction a separate instance
-        pred_boxes = pred_boxes.reshape(-1, 4)
-        pred_scores = pred_scores.reshape(-1)
-        pred_labels = pred_labels.reshape(-1)
-
-        pred_boxes, pred_labels, pred_scores = self.filter_predictions(pred_boxes, pred_labels, pred_scores)
-
-        frcnn_output['bboxes'] = pred_boxes
-        frcnn_output['labels'] = pred_labels
-        frcnn_output['scores'] = pred_scores
         
         if self.training and targets is not None:
             classification_loss = torch.nn.functional.cross_entropy(cls_pred, labels.long())
@@ -557,6 +530,34 @@ class ROIhead(torch.nn.Module):
             ) / labels.numel()
             frcnn_output['frcnn_classification_loss'] = classification_loss
             frcnn_output['frcnn_localization_loss'] = localization_loss
+        else:
+            # print("\n [in ROIhead] cls_pred.shape, reg_pred.shape", cls_pred.shape, reg_pred.shape)
+            # apply regression predictions to proposals
+            pred_boxes = apply_regression(reg_pred.to(self.device), proposals.to(self.device))
+
+            pred_scores = torch.nn.functional.softmax(cls_pred, dim = -1)
+
+            # clamp boxes to image boundary
+            pred_boxes = clamp_boxes(pred_boxes, image_shape[-2:])
+
+            # create labels for each prediction
+            pred_labels = torch.arange(num_classes, device = cls_pred.device).view(1, -1).expand_as(pred_scores)
+
+            # remove background class predictions
+            pred_boxes = pred_boxes[:,1:] # (number_proposals = 128, 20, 4)
+            pred_scores = pred_scores[:,1:]
+            pred_labels = pred_labels[:,1:]
+
+            # batch everything by making every class prediction a separate instance
+            pred_boxes = pred_boxes.reshape(-1, 4)
+            pred_scores = pred_scores.reshape(-1)
+            pred_labels = pred_labels.reshape(-1)
+
+            pred_boxes, pred_labels, pred_scores = self.filter_predictions(pred_boxes, pred_labels, pred_scores)
+
+            frcnn_output['bboxes'] = pred_boxes
+            frcnn_output['labels'] = pred_labels
+            frcnn_output['scores'] = pred_scores
 
         return frcnn_output
 
@@ -619,7 +620,7 @@ class FasterRCNN(torch.nn.Module):
             x_max = x_max * ratio_width
             y_min = y_min * ratio_height
             y_max = y_max * ratio_height
-            bboxes = torch.stack([x_min, y_min, x_max, y_max], dim = 2)
+            bboxes = torch.stack((x_min, y_min, x_max, y_max), dim = 2)
         return img, bboxes
     
     def transform_boxes_to_original_image_size(self, boxes, new_size, ori_size):

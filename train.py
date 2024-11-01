@@ -64,6 +64,7 @@ def train():
     num_epochs = 20
     for epoch in range(num_epochs):
         model.train()
+        optimizer.zero_grad()
         train_bar = tqdm.tqdm(train_loader, file = sys.stdout, ncols=100)
         for one_batch in train_bar:
 
@@ -87,7 +88,7 @@ def train():
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
-            scheduler.step()
+            
 
             # id = int(id[0])
             # tqdm.tqdm.write(f"Processed ID: {id}")
@@ -104,6 +105,7 @@ def train():
             # plt.draw()
             # plt.pause(0.01)  # Pause to allow the plot to update
         # print the mean loss of this epoch
+        scheduler.step()
         loss_output = ''
         loss_output += 'Epoch: {}\n'.format(epoch)
         loss_output += 'Loss: {}\n'.format(sum(losses) / len(losses))
