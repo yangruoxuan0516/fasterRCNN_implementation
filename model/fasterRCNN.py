@@ -1,8 +1,8 @@
 import torch
 import torchvision
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+# import matplotlib.pyplot as plt
+# import matplotlib.patches as patches
 
 import math
 
@@ -68,6 +68,7 @@ def apply_regression(reg_pred, anchors_or_proposals):
     dw = reg_pred[...,2] # (number of anchors = batch_size * (9 * 38 * 50 = 17100), 1,)
     dh = reg_pred[...,3] # (number of anchors = batch_size * (9 * 38 * 50 = 17100), 1,)
 
+    # beacause of this ??
     dw = torch.clamp(dw, max=math.log(1000.0 / 16))
     dh = torch.clamp(dh, max=math.log(1000.0 / 16))
 
@@ -116,7 +117,7 @@ def get_regression(gt_boxes, anchors_or_proposals):
     targets_dw = torch.log(gt_w / w)
     targets_dh = torch.log(gt_h / h)
 
-    regression_targets = torch.stack([targets_dx, targets_dy, targets_dw, targets_dh], dim = 1)
+    regression_targets = torch.stack((targets_dx, targets_dy, targets_dw, targets_dh), dim = 1)
 
     return regression_targets
     
@@ -168,9 +169,9 @@ class RPN(torch.nn.Module):
         # (9, 4)
 
         # anchors for all pixels in the feature map, yet with its size adjusted to the image size
-        shift_w = torch.arange(0, feature_map.shape[-2]) * 16
-        shift_h = torch.arange(0, feature_map.shape[-1]) * 16
-        shift_w, shift_h = torch.meshgrid(shift_w, shift_h,indexing='ij')
+        shift_w = torch.arange(0, feature_map.shape[-1]) * 16
+        shift_h = torch.arange(0, feature_map.shape[-2]) * 16
+        shift_h, shift_w = torch.meshgrid(shift_h, shift_w,indexing='ij')
 
         shift_w = shift_w.reshape(-1)
         shift_h = shift_h.reshape(-1)
@@ -473,7 +474,7 @@ class ROIhead(torch.nn.Module):
 
     def forward(self, feature_map, proposals, image_shape, targets):
         if self.training and targets is not None:
-            # because of this ??
+            
             proposals = torch.cat([proposals, targets['bboxes'][0]], dim=0)
 
 
