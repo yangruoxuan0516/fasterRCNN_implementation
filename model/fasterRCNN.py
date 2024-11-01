@@ -272,12 +272,12 @@ class RPN(torch.nn.Module):
         best_match_gt_idx_before_threshold = best_gt_for_anchor_idx.clone()
 
         below_low_threshold = best_gt_for_anchor_score < 0.3 # a list of boolean values
-        best_gt_for_anchor_idx[below_low_threshold] = -1
         between_thresholds = (best_gt_for_anchor_score >= 0.3) & (best_gt_for_anchor_score < 0.7)
+        best_gt_for_anchor_idx[below_low_threshold] = -1
         best_gt_for_anchor_idx[between_thresholds] = -2
 
         # low quality anchor boxes
-        best_anchor_for_gt_score, best_anchor_for_gt_idx = iou_matrix.max(dim = 1)
+        best_anchor_for_gt_score, _ = iou_matrix.max(dim = 1)
         gt_anchor_pair_with_best_iou = torch.where(iou_matrix == best_anchor_for_gt_score[:,None])
 
         # get the anchor indeces to update
@@ -419,8 +419,13 @@ class ROIhead(torch.nn.Module):
 
         # we keep these negative, in order to use best_gt_for_proposal_idx 
         # which goes from 0 to maybe 20, to label the proposals
-        # best_gt_for_proposal_idx[bg_idx] = -1
-        # best_gt_for_proposal_idx[neither_idx] = -2
+        best_gt_for_proposal_idx[bg_idx] = -1
+        best_gt_for_proposal_idx[neither_idx] = -2
+
+        # same as in "labels = gt_labels[best_gt_for_proposal_idx.clamp(min=0)]"
+        # we assign gt_boxes even to bg and neither
+        # but we don't use them, we ignore them by referring to labels
+        matched_gt_boxes = gt_boxes[best_gt_for_proposal_idx.clamp(min=0)]
 
         # by using clamp, the bg and neither are labeled as the first fg in gt_labels
         # but now everything goes from 1 to upper
@@ -428,15 +433,10 @@ class ROIhead(torch.nn.Module):
         labels = labels.to(torch.int64)
         # we set bg to 0
         # bg_proposals = best_gt_for_proposal_idx == -1
-        labels[bg_idx] = 0.0
+        labels[bg_idx] = 0
         # and neither to -1
         # neither_proposals = best_gt_for_proposal_idx == -2
-        labels[neither_idx] = -1.0
-
-        # same as in "labels = gt_labels[best_gt_for_proposal_idx.clamp(min=0)]"
-        # we assign gt_boxes even to bg and neither
-        # but we don't use them, we ignore them by referring to labels
-        matched_gt_boxes = gt_boxes[best_gt_for_proposal_idx.clamp(min=0)]
+        labels[neither_idx] = -1
 
         # the returned tensors are of the same length
         return labels, matched_gt_boxes
