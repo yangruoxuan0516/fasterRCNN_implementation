@@ -266,16 +266,16 @@ def infer():
 def evaluate_map():
     faster_rcnn_model, voc, test_dataset = load_model_and_dataset()
 
-    faster_rcnn_model.roi_head.threshold = 0.7
+    # faster_rcnn_model.roi_head.threshold = 0.7
 
     gts = []
     preds = []
-    stop = 0
+    # stop = 0
     for one_batch in tqdm(test_dataset):
 
-        if stop == 1000:
-            break
-        stop += 1
+        # if stop == 1000:
+        #     break
+        # stop += 1
         img_id, im, target = one_batch
         # print('img_id', img_id)
         # print('target', target)
@@ -315,12 +315,12 @@ def evaluate_map():
         gts.append(gt_boxes)
         preds.append(pred_boxes)
 
-    print('preds', preds)
-    print('gts', gts)
+    # print('preds', preds)
+    # print('gts', gts)
    
-    mean_ap, all_aps = compute_map(preds, gts)#, method='interp')
+    mean_ap, all_aps = compute_map(preds, gts, method='interp')
 
-    print('mean_ap', mean_ap)
+    # print('mean_ap', mean_ap)
 
     print('Class Wise Average Precisions')
     for idx in range(len(voc.idx2label)):
