@@ -169,8 +169,8 @@ class RPN(torch.nn.Module):
         # (9, 4)
 
         # anchors for all pixels in the feature map, yet with its size adjusted to the image size
-        shift_w = torch.arange(0, feature_map.shape[-1]) * 16
-        shift_h = torch.arange(0, feature_map.shape[-2]) * 16
+        shift_w = torch.arange(0, feature_map.shape[-1]) * 16 + 8
+        shift_h = torch.arange(0, feature_map.shape[-2]) * 16 + 8
         shift_h, shift_w = torch.meshgrid(shift_h, shift_w,indexing='ij')
 
         shift_w = shift_w.reshape(-1)
