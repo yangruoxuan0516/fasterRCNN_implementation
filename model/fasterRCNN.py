@@ -383,8 +383,8 @@ class ROIhead(torch.nn.Module):
         self.in_channels = 512;
         self.num_classes = 21;
         self.pool_size = 7;
-        self.fc_dim = 1024; # fc stands for fully connected
-        # self.fc_dim = 4096  # to match the dimensions of VGG fc6 and fc7 layers
+        # self.fc_dim = 1024; # fc stands for fully connected
+        self.fc_dim = 4096  # to match the dimensions of VGG fc6 and fc7 layers
     
         # # [TODO] cf. Fast RCNN 3.1. Truncated SVD for faster detection
         self.fc6 = torch.nn.Linear(self.in_channels * self.pool_size * self.pool_size, self.fc_dim)
