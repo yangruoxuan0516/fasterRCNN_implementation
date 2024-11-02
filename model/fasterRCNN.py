@@ -467,7 +467,7 @@ class ROIhead(torch.nn.Module):
         keep_mask = torch.zeros_like(pred_scores, dtype = torch.bool)
         for cls_id in torch.unique(pred_labels):
             curr_idx = torch.where(pred_labels == cls_id)[0]
-            curr_keep = torchvision.ops.nms(pred_boxes[curr_idx], pred_scores[curr_idx], 0.5)
+            curr_keep = torchvision.ops.nms(pred_boxes[curr_idx], pred_scores[curr_idx], 0.3)
             keep_mask[curr_idx[curr_keep]] = True
         keep_idx = torch.where(keep_mask)[0]
         keep_idx_after_nms = keep_idx[pred_scores[keep_idx].sort(descending = True)[1]]
