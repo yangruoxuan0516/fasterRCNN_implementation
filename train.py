@@ -61,7 +61,7 @@ def train():
     train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=4)
         
 
-    acc_steps = 3
+    acc_steps = 1
     step_count = 1
 
     # num_epochs = config['train_param']['num_epochs']
