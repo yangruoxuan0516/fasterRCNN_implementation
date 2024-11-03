@@ -65,7 +65,7 @@ def train():
     step_count = 1
 
     # num_epochs = config['train_param']['num_epochs']
-    num_epochs = 12
+    num_epochs = 30
     for epoch in range(num_epochs):
         model.train()
         optimizer.zero_grad()
@@ -80,7 +80,7 @@ def train():
             target['bboxes'] = target['bboxes'].float().to(device)
             target['labels'] = target['labels'].long().to(device)
             rpn_output, frcnn_output = model(img, target, img_id)
-            rpn_loss = rpn_output['rpn_classification_loss'] + rpn_output['rpn_localization_loss']*3
+            rpn_loss = rpn_output['rpn_classification_loss'] + rpn_output['rpn_localization_loss']
             frcnn_loss = frcnn_output['frcnn_classification_loss'] + frcnn_output['frcnn_localization_loss']*10
 
             # print the four losses
