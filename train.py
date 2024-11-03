@@ -82,6 +82,12 @@ def train():
             rpn_output, frcnn_output = model(img, target, img_id)
             rpn_loss = rpn_output['rpn_classification_loss'] + rpn_output['rpn_localization_loss']
             frcnn_loss = frcnn_output['frcnn_classification_loss'] + frcnn_output['frcnn_localization_loss']
+
+            # print the four losses
+            # print("RPN Classification Loss: ", rpn_output['rpn_classification_loss'])
+            # print("RPN Localization Loss: ", rpn_output['rpn_localization_loss'])
+            # print("FRCNN Classification Loss: ", frcnn_output['frcnn_classification_loss'])
+            # print("FRCNN Localization Loss: ", frcnn_output['frcnn_localization_loss'])
             loss = rpn_loss + frcnn_loss
 
             losses.append(loss.item())
