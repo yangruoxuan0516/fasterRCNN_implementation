@@ -65,7 +65,7 @@ def train():
     step_count = 1
 
     # num_epochs = config['train_param']['num_epochs']
-    num_epochs = 20
+    num_epochs = 12
     for epoch in range(num_epochs):
         model.train()
         optimizer.zero_grad()
