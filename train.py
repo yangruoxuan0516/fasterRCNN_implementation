@@ -81,7 +81,7 @@ def train():
             target['labels'] = target['labels'].long().to(device)
             rpn_output, frcnn_output = model(img, target, img_id)
             rpn_loss = rpn_output['rpn_classification_loss'] + rpn_output['rpn_localization_loss']
-            frcnn_loss = frcnn_output['frcnn_classification_loss'] + frcnn_output['frcnn_localization_loss']*10
+            frcnn_loss = frcnn_output['frcnn_classification_loss'] + frcnn_output['frcnn_localization_loss']
 
             # print the four losses
             # print("RPN Classification Loss: ", rpn_output['rpn_classification_loss'])
