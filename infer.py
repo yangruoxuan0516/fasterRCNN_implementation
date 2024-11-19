@@ -474,6 +474,8 @@ def calc_detection_voc_prec_rec(
             gt_bbox_l = gt_bbox_l.copy()
             gt_bbox_l[:, 2:] += 1
 
+            print("pred_bbox_l", pred_bbox_l)
+            print("gt_bbox_l", gt_bbox_l)
             iou = get_iou(pred_bbox_l, gt_bbox_l)
             gt_index = iou.argmax(axis=1)
             # set -1 if there is no matching ground truth
