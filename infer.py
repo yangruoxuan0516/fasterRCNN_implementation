@@ -634,7 +634,10 @@ def evaluate_map():
         im = im.float().to(device)
         target_boxes = target['bboxes'].float().to(device)[0]
         target_labels = target['labels'].long().to(device)[0]
-        rpn_output, frcnn_output = faster_rcnn_model(im, None)
+        
+        with torch.no_grad():
+            rpn_output, frcnn_output = faster_rcnn_model(im, None)
+
 
         boxes = frcnn_output['bboxes']
         labels = frcnn_output['labels']
