@@ -14,6 +14,8 @@ from torch.optim.lr_scheduler import MultiStepLR
 
 import numpy as np
 import random
+from infer import evaluate_map
+
 
 def train():
     # Load the YAML configuration
@@ -135,6 +137,9 @@ def train():
         losses = []
         losses_rpns = []
         losses_frcnns = []
+
+        # compute mAP
+        evaluate_map()
 
     # # Close interactive plotting mode
     # plt.ioff()
