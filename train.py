@@ -139,9 +139,10 @@ def train():
         losses_frcnns = []
 
 
-        # compute mAP
-        torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
-        evaluate_map()
+        # compute mAP every 3 epochs
+        if epoch % 3 == 0:
+            torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
+            evaluate_map()
 
     # # Close interactive plotting mode
     # plt.ioff()
