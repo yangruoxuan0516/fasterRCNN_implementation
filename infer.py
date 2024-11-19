@@ -26,6 +26,46 @@ from torch.utils.data.dataloader import DataLoader
 
 device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 
+def bbox_iou(bbox_a, bbox_b):
+    """Calculate the Intersection of Unions (IoUs) between bounding boxes.
+
+    IoU is calculated as a ratio of area of the intersection
+    and area of the union.
+
+    This function accepts both :obj:`numpy.ndarray` and :obj:`cupy.ndarray` as
+    inputs. Please note that both :obj:`bbox_a` and :obj:`bbox_b` need to be
+    same type.
+    The output is same type as the type of the inputs.
+
+    Args:
+        bbox_a (array): An array whose shape is :math:`(N, 4)`.
+            :math:`N` is the number of bounding boxes.
+            The dtype should be :obj:`numpy.float32`.
+        bbox_b (array): An array similar to :obj:`bbox_a`,
+            whose shape is :math:`(K, 4)`.
+            The dtype should be :obj:`numpy.float32`.
+
+    Returns:
+        array:
+        An array whose shape is :math:`(N, K)`. \
+        An element at index :math:`(n, k)` contains IoUs between \
+        :math:`n` th bounding box in :obj:`bbox_a` and :math:`k` th bounding \
+        box in :obj:`bbox_b`.
+
+    """
+    if bbox_a.shape[1] != 4 or bbox_b.shape[1] != 4:
+        raise IndexError
+
+    # top left
+    tl = np.maximum(bbox_a[:, None, :2], bbox_b[:, :2])
+    # bottom right
+    br = np.minimum(bbox_a[:, None, 2:], bbox_b[:, 2:])
+
+    area_i = np.prod(br - tl, axis=2) * (tl < br).all(axis=2)
+    area_a = np.prod(bbox_a[:, 2:] - bbox_a[:, :2], axis=1)
+    area_b = np.prod(bbox_b[:, 2:] - bbox_b[:, :2], axis=1)
+    return area_i / (area_a[:, None] + area_b - area_i)
+
 
 def get_iou(det, gt):
     det_x1, det_y1, det_x2, det_y2 = det
@@ -474,9 +514,9 @@ def calc_detection_voc_prec_rec(
             gt_bbox_l = gt_bbox_l.copy()
             gt_bbox_l[:, 2:] += 1
 
-            print("pred_bbox_l", pred_bbox_l)
-            print("gt_bbox_l", gt_bbox_l)
-            iou = get_iou(pred_bbox_l, gt_bbox_l)
+            # print("pred_bbox_l", pred_bbox_l)
+            # print("gt_bbox_l", gt_bbox_l)
+            iou = bbox_iou(pred_bbox_l, gt_bbox_l)
             gt_index = iou.argmax(axis=1)
             # set -1 if there is no matching ground truth
             gt_index[iou.max(axis=1) < iou_thresh] = -1
