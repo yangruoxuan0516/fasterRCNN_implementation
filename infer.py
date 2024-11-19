@@ -445,22 +445,9 @@ def calc_detection_voc_prec_rec(
 
         if gt_difficult is None:
             gt_difficult = np.zeros(gt_bbox.shape[0], dtype=bool)
-        # print("pred_label",pred_label)
-        # print("gt_label",gt_label)
-        pred_label = np.array(pred_label, ndmin=1)
-        pred_label = torch.tensor(pred_label)
-        pred_score = pred_score.detach().cpu().numpy()
-        pred_score = np.array(pred_score, ndmin=1)
-        pred_score = torch.tensor(pred_score)
-        gt_label = np.array(gt_label, ndmin=1)
-        gt_label = torch.tensor(gt_label)
 
         for l in np.unique(np.concatenate((pred_label, gt_label)).astype(int)):
             pred_mask_l = pred_label == l
-            pred_bbox = pred_bbox.unsqueeze(0)
-            print(f"pred_bbox shape: {pred_bbox.shape}")
-            print(f"pred_score shape: {pred_score.shape}")
-            print(f"pred_mask_l shape: {pred_mask_l.shape}")
             pred_bbox_l = pred_bbox[pred_mask_l]
             pred_score_l = pred_score[pred_mask_l]
             # sort by score
@@ -634,7 +621,7 @@ def evaluate_map():
         im = im.float().to(device)
         target_boxes = target['bboxes'].float().to(device)[0]
         target_labels = target['labels'].long().to(device)[0]
-        
+
         with torch.no_grad():
             rpn_output, frcnn_output = faster_rcnn_model(im, None)
 
