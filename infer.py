@@ -630,11 +630,11 @@ def evaluate_map():
         labels = frcnn_output['labels']
         scores = frcnn_output['scores']
         
-        pred_bboxes.append(boxes)
-        pred_labels.append(labels)
-        pred_scores.append(scores)
-        gt_bboxes.append(target_boxes)
-        gt_labels.append(target_labels)
+        pred_bboxes.append(boxes.cpu().numpy())
+        pred_labels.append(labels.cpu().numpy())
+        pred_scores.append(scores.cpu().numpy())
+        gt_bboxes.append(target_boxes.cpu().numpy())
+        gt_labels.append(target_labels.cpu().numpy())
 
 
         pred_boxes = {}
