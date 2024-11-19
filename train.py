@@ -138,7 +138,9 @@ def train():
         losses_rpns = []
         losses_frcnns = []
 
+
         # compute mAP
+        torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
         evaluate_map()
 
     # # Close interactive plotting mode
