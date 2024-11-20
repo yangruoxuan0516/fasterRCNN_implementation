@@ -63,7 +63,7 @@ def train():
     acc_steps = 1
     step_count = 1
 
-    num_epochs = config.TRAIN_EPOCHS_NUM
+    num_epochs = config.TRAIN_EPOCHS_NUM * 2
     for epoch in range(num_epochs):
         model.train()
         optimizer.zero_grad()
@@ -86,7 +86,11 @@ def train():
             # print("RPN Localization Loss: ", rpn_output['rpn_localization_loss'])
             # print("FRCNN Classification Loss: ", frcnn_output['frcnn_classification_loss'])
             # print("FRCNN Localization Loss: ", frcnn_output['frcnn_localization_loss'])
-            loss = rpn_loss + frcnn_loss
+            if epoch <= num_epochs // 2:
+                loss = rpn_loss
+            else:
+                loss = rpn_loss + frcnn_loss
+            # loss = rpn_loss + frcnn_loss
 
             losses.append(loss.item())
             losses_rpns.append(rpn_loss.item())
