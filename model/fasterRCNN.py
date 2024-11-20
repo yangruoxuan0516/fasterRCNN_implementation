@@ -370,8 +370,7 @@ class RPN(torch.nn.Module):
             cls_loss = torch.nn.functional.binary_cross_entropy_with_logits(
                 cls_pred[sampled_idx].flatten(),
                 labels_for_anchors[sampled_idx].flatten(),
-            ) / sampled_idx.numel()
-            # log loss
+            ) # log loss
 
             localization_loss = (
                 torch.nn.functional.smooth_l1_loss(
@@ -379,8 +378,8 @@ class RPN(torch.nn.Module):
                     regression_targets[sampled_pos_idx_mask],
                     beta = 1/9,
                     reduction='sum',
-                # ) / (sampled_idx.numel())
-                ) / torch.sum(sampled_pos_idx_mask > 0) * config.RPN_LAMBDA
+                ) / (sampled_idx.numel())
+                # ) / torch.sum(sampled_pos_idx_mask > 0)
             )
 
             # print("\n [in RPN] cls_loss, localization_loss", cls_loss, localization_loss)
@@ -535,7 +534,7 @@ class ROIhead(torch.nn.Module):
         frcnn_output = {}
         
         if self.training and targets is not None:
-            classification_loss = torch.nn.functional.cross_entropy(cls_pred, labels.long()) / labels.numel()
+            classification_loss = torch.nn.functional.cross_entropy(cls_pred, labels.long()) #/ 5
 
             # compute localization only for non background 
             fg_proposals_idx = torch.where(labels > 0)[0]
@@ -546,8 +545,8 @@ class ROIhead(torch.nn.Module):
                 regression_targets[fg_proposals_idx],
                 beta = 1/9,
                 reduction = 'sum'
-            # ) / labels.numel() 
-            ) / torch.sum(labels > 0)
+            ) / labels.numel() 
+            # ) / torch.sum(labels > 0)
 
             frcnn_output['frcnn_classification_loss'] = classification_loss
             frcnn_output['frcnn_localization_loss'] = localization_loss
