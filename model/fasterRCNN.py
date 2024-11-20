@@ -379,8 +379,8 @@ class RPN(torch.nn.Module):
                     regression_targets[sampled_pos_idx_mask],
                     beta = 1/9,
                     reduction='sum',
-                ) / (sampled_idx.numel())
-                # ) / torch.sum(sampled_pos_idx_mask > 0)
+                # ) / (sampled_idx.numel())
+                ) / torch.sum(sampled_pos_idx_mask > 0) * config.RPN_LAMBDA
             )
 
             # print("\n [in RPN] cls_loss, localization_loss", cls_loss, localization_loss)
