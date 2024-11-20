@@ -539,7 +539,8 @@ class ROIhead(torch.nn.Module):
         frcnn_output = {}
         
         if self.training and targets is not None:
-            classification_loss = torch.nn.functional.cross_entropy(cls_pred, labels.long()) #/ 5
+            classification_loss = torch.nn.functional.cross_entropy(cls_pred, labels.long()) / labels.numel()
+            print("\n labels.numel()", labels.numel())
 
             # compute localization only for non background 
             fg_proposals_idx = torch.where(labels > 0)[0]
