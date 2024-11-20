@@ -373,7 +373,7 @@ class RPN(torch.nn.Module):
             ) / sampled_idx.numel()
             # log loss
 
-            print("\n sampled_idx.numel()", sampled_idx.numel())
+            # print("\n sampled_idx.numel()", sampled_idx.numel())
 
             localization_loss = (
                 torch.nn.functional.smooth_l1_loss(
@@ -385,7 +385,7 @@ class RPN(torch.nn.Module):
                 ) / feature_map.shape[-1] / feature_map.shape[-2] * config.RPN_LAMBDA
             )
 
-            print("\n feature_map.shape[-1] * feature_map.shape[-2]",feature_map.shape[-1] * feature_map.shape[-2])
+            # print("\n feature_map.shape[-1] * feature_map.shape[-2]",feature_map.shape[-1] * feature_map.shape[-2])
 
             # print("\n [in RPN] cls_loss, localization_loss", cls_loss, localization_loss)
 
@@ -540,7 +540,7 @@ class ROIhead(torch.nn.Module):
         
         if self.training and targets is not None:
             classification_loss = torch.nn.functional.cross_entropy(cls_pred, labels.long()) / labels.numel()
-            print("\n labels.numel()", labels.numel())
+            # print("\n labels.numel()", labels.numel())
 
             # compute localization only for non background 
             fg_proposals_idx = torch.where(labels > 0)[0]
