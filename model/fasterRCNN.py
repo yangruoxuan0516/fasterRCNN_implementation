@@ -382,10 +382,10 @@ class RPN(torch.nn.Module):
                     beta = 1/9,
                     reduction='sum',
                 # ) / (sampled_idx.numel())
-                ) / torch.sum(sampled_pos_idx_mask > 0) * config.RPN_LAMBDA
+                ) / feature_map.shape[-1] / feature_map.shape[-2] * config.RPN_LAMBDA
             )
 
-            print("\n sum(sampled_pos_idx_mask > 0)", sum(sampled_pos_idx_mask > 0))
+            print("\n feature_map.shape[-1] * feature_map.shape[-2]",feature_map.shape[-1] * feature_map.shape[-2])
 
             # print("\n [in RPN] cls_loss, localization_loss", cls_loss, localization_loss)
 
