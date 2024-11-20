@@ -373,6 +373,8 @@ class RPN(torch.nn.Module):
             ) / sampled_idx.numel()
             # log loss
 
+            print("\n sampled_idx.numel()", sampled_idx.numel())
+
             localization_loss = (
                 torch.nn.functional.smooth_l1_loss(
                     reg_pred[sampled_pos_idx_mask],
@@ -382,6 +384,8 @@ class RPN(torch.nn.Module):
                 # ) / (sampled_idx.numel())
                 ) / torch.sum(sampled_pos_idx_mask > 0) * config.RPN_LAMBDA
             )
+
+            print("\n sum(sampled_pos_idx_mask > 0)", sum(sampled_pos_idx_mask > 0))
 
             # print("\n [in RPN] cls_loss, localization_loss", cls_loss, localization_loss)
 
