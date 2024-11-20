@@ -53,7 +53,7 @@ class CONFIG:
     FRCNN_IMG_MAX_SIZE = 1000
 
     # TRAIN
-    TRAIN_EPOCHS_NUM = 20
+    TRAIN_EPOCHS_NUM = 1
 
 
     

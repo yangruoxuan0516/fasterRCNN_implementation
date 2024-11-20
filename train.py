@@ -31,6 +31,11 @@ def train():
 
     model = FasterRCNN(device).to(device)
     # optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.001)
+
+# train rpn first
+    for p in model.roi_head.parameters():
+        p.requires_grad = False
+
     optimizer = torch.optim.SGD(lr=0.001,
                                 params=filter(lambda p: p.requires_grad,
                                               model.parameters()),
@@ -51,19 +56,19 @@ def train():
     losses_rpns = []  # Track RPN loss over time
     losses_frcnns = []  # Track FRCNN loss over time
 
-    avg_losses = []
-    avg_losses_rpns = []
-    avg_losses_frcnns = []
+    # avg_losses = []
+    # avg_losses_rpns = []
+    # avg_losses_frcnns = []
 
     # load dataset
     train_dataset = voc.VOCDataset(split='trainval')
     train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=4)
         
 
-    acc_steps = 1
-    step_count = 1
+    # acc_steps = 1
+    # step_count = 1
 
-    num_epochs = config.TRAIN_EPOCHS_NUM * 2
+    num_epochs = config.TRAIN_EPOCHS_NUM
     for epoch in range(num_epochs):
         model.train()
         optimizer.zero_grad()
@@ -86,11 +91,12 @@ def train():
             # print("RPN Localization Loss: ", rpn_output['rpn_localization_loss'])
             # print("FRCNN Classification Loss: ", frcnn_output['frcnn_classification_loss'])
             # print("FRCNN Localization Loss: ", frcnn_output['frcnn_localization_loss'])
-            if epoch <= num_epochs // 2:
-                loss = rpn_loss
-            else:
-                loss = rpn_loss + frcnn_loss
+
+                
             # loss = rpn_loss + frcnn_loss
+
+# train rpn first 
+            loss = rpn_loss
 
             losses.append(loss.item())
             losses_rpns.append(rpn_loss.item())
@@ -98,12 +104,12 @@ def train():
 
             # backward
 
-            loss = loss / acc_steps
+            # loss = loss / acc_steps
             loss.backward()
-            if step_count % acc_steps == 0:
-                optimizer.step()
-                optimizer.zero_grad()
-            step_count += 1
+            # if step_count % acc_steps == 0:
+            optimizer.step()
+            optimizer.zero_grad()
+            # step_count += 1
             
 
             # id = int(id[0])
@@ -131,9 +137,9 @@ def train():
         loss_output += 'FRCNN Loss: {}\n'.format(sum(losses_frcnns) / len(losses_frcnns))
         print(loss_output)
 
-        avg_losses.append(sum(losses) / len(losses))
-        avg_losses_rpns.append(sum(losses_rpns) / len(losses_rpns))
-        avg_losses_frcnns.append(sum(losses_frcnns) / len(losses_frcnns))
+        # avg_losses.append(sum(losses) / len(losses))
+        # avg_losses_rpns.append(sum(losses_rpns) / len(losses_rpns))
+        # avg_losses_frcnns.append(sum(losses_frcnns) / len(losses_frcnns))
         losses = []
         losses_rpns = []
         losses_frcnns = []
@@ -147,10 +153,67 @@ def train():
     # # Close interactive plotting mode
     # plt.ioff()
     # plt.show()
-    print("LOSSES: ", avg_losses)
-    print("LOSSES_RPNS: ", avg_losses_rpns)
-    print("LOSSES_FRCNNS: ", avg_losses_frcnns)
+    # print("LOSSES: ", avg_losses)
+    # print("LOSSES_RPNS: ", avg_losses_rpns)
+    # print("LOSSES_FRCNNS: ", avg_losses_frcnns)
 
+
+
+# train rpn + roihead
+    for p in model.roi_head.parameters():
+        p.requires_grad = False
+
+    optimizer = torch.optim.SGD(lr=0.001,
+                                params=filter(lambda p: p.requires_grad,
+                                              model.parameters()),
+                                weight_decay=5E-4,
+                                momentum=0.9)
+    scheduler = MultiStepLR(optimizer, milestones=[12,16], gamma=0.1)
+
+    for epoch in range(num_epochs):
+        model.train()
+        optimizer.zero_grad()
+        train_bar = tqdm.tqdm(train_loader, file = sys.stdout, ncols=100)
+        for one_batch in train_bar:
+            img_id, img, target = one_batch
+
+            img = img.float().to(device)
+            target['bboxes'] = target['bboxes'].float().to(device)
+            target['labels'] = target['labels'].long().to(device)
+            rpn_output, frcnn_output = model(img, target, img_id)
+            rpn_loss = rpn_output['rpn_classification_loss'] + rpn_output['rpn_localization_loss']
+            frcnn_loss = frcnn_output['frcnn_classification_loss'] + frcnn_output['frcnn_localization_loss']
+
+            loss = rpn_loss + frcnn_loss
+
+            losses.append(loss.item())
+            losses_rpns.append(rpn_loss.item())
+            losses_frcnns.append(frcnn_loss.item())
+
+            loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+
+            train_bar.desc = "train epoch[{}/{}] loss:{:.3f}".format(epoch+1, num_epochs, loss)
+
+        optimizer.step()
+        optimizer.zero_grad()
+        scheduler.step()
+        loss_output = ''
+        loss_output += 'Epoch: {}\n'.format(epoch)
+        loss_output += 'Loss: {}\n'.format(sum(losses) / len(losses))
+        loss_output += 'RPN Loss: {}\n'.format(sum(losses_rpns) / len(losses_rpns))
+        loss_output += 'FRCNN Loss: {}\n'.format(sum(losses_frcnns) / len(losses_frcnns))
+        print(loss_output)
+
+        losses = []
+        losses_rpns = []
+        losses_frcnns = []
+
+        # compute mAP every 3 epochs
+        if epoch % 3 == 0:
+            torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
+            evaluate_map()
 
     # save the model
     torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
