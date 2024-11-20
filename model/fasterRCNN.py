@@ -370,7 +370,8 @@ class RPN(torch.nn.Module):
             cls_loss = torch.nn.functional.binary_cross_entropy_with_logits(
                 cls_pred[sampled_idx].flatten(),
                 labels_for_anchors[sampled_idx].flatten(),
-            ) # log loss
+            ) / sampled_idx.numel()
+            # log loss
 
             localization_loss = (
                 torch.nn.functional.smooth_l1_loss(
