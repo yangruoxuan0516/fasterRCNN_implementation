@@ -54,6 +54,7 @@ class CONFIG:
 
     # TRAIN
     TRAIN_EPOCHS_NUM = 25
+    TRAIN_SUB_EPOCHS_NUM = 1
 
 
     
