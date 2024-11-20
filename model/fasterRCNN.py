@@ -6,6 +6,8 @@ import torchvision
 
 import math
 
+from config.config import config
+
 def get_iou(boxes1,boxes2):
     # boxes1 : (number of boxes1, 4)
     # boxes2 : (number of boxes2, 4)
@@ -126,26 +128,28 @@ class RPN(torch.nn.Module):
         super(RPN, self).__init__()
 
         # anchor parameters
-        self.anchor_scale = [128, 256, 512]
-        self.anchor_ratio = [0.5, 1, 2]
+        self.anchor_scale = config.RPN_ANCHOR_SCALES
+        self.anchor_ratio = config.RPN_ANCHOR_RATIOS
+
+        self.anchor_number = len(self.anchor_scale) * len(self.anchor_ratio)
 
         # 3*3 conv layer with 512 filters
-        self.conv_layer = torch.nn.Conv2d(in_channels = 512, 
-                                    out_channels = 512, 
+        self.conv_layer = torch.nn.Conv2d(in_channels = config.RPN_CONV_CHANNELS, 
+                                    out_channels = config.RPN_CONV_CHANNELS, 
                                     kernel_size = 3, 
                                     stride = 1, 
                                     padding = 1) 
         
         # 1*1 conv layer with 18 filters, 18 = 2 (forground / background) * 9 (number of anchors)
-        self.cls_layer = torch.nn.Conv2d(in_channels = 512, 
-                                    out_channels = 9, 
+        self.cls_layer = torch.nn.Conv2d(in_channels = config.RPN_CONV_CHANNELS, 
+                                    out_channels = self.anchor_number, 
                                     kernel_size = 1, 
                                     stride = 1, 
                                     padding = 0)
         
         # 1*1 conv layer with 36 filters, 36 = 4 (coordinates) * 9 (number of anchors)
-        self.reg_layer = torch.nn.Conv2d(in_channels = 512, 
-                                    out_channels = 36, 
+        self.reg_layer = torch.nn.Conv2d(in_channels = config.RPN_CONV_CHANNELS, 
+                                    out_channels = self.anchor_number * 4, 
                                     kernel_size = 1, 
                                     stride = 1, 
                                     padding = 0)
@@ -169,8 +173,8 @@ class RPN(torch.nn.Module):
         # (9, 4)
 
         # anchors for all pixels in the feature map, yet with its size adjusted to the image size
-        shift_w = torch.arange(0, feature_map.shape[-1]) * 16 + 8
-        shift_h = torch.arange(0, feature_map.shape[-2]) * 16 + 8
+        shift_w = torch.arange(0, feature_map.shape[-1]) * config.FESTURE_MAP_STRIDE + config.FESTURE_MAP_STRIDE/2*config.RPN_CENTRALIZE_ANCHORS
+        shift_h = torch.arange(0, feature_map.shape[-2]) * config.FESTURE_MAP_STRIDE + config.FESTURE_MAP_STRIDE/2*config.RPN_CENTRALIZE_ANCHORS
         shift_h, shift_w = torch.meshgrid(shift_h, shift_w,indexing='ij')
 
         shift_w = shift_w.reshape(-1)
@@ -219,11 +223,11 @@ class RPN(torch.nn.Module):
 
 
         if self.training:
-            prenms_topk = 12000
-            topk = 2000
+            prenms_topk = config.RPN_PRE_NMS_TOP_N_TRAIN
+            topk = config.RPN_NMS_TOP_N_TRAIN
         else:
-            prenms_topk = 6000
-            topk = 300
+            prenms_topk = config.RPN_PRE_NMS_TOP_N_TEST
+            topk = config.RPN_NMS_TOP_N_TEST
 
         _, top_n_idx = torch.topk(cls_pred, min(prenms_topk,len(cls_pred))) # (10000,)
                                                    # topk returns (values, indices)
@@ -236,7 +240,7 @@ class RPN(torch.nn.Module):
         proposals = clamp_boxes(proposals, img_shape[-2:]) # (10000, 4)
 
         # remove the super small boxes, cf 知乎专栏
-        min_size = 16
+        min_size = config.RPN_MIN_PROPOSAL_SIZE
         ws, hs = proposals[:, 2] - proposals[:, 0], proposals[:, 3] - proposals[:, 1]
         keep = (ws >= min_size) & (hs >= min_size)
         keep = torch.where(keep)[0]
@@ -246,7 +250,7 @@ class RPN(torch.nn.Module):
         # NMS based on objectness score
         # Non-Maximum Suppression, 非极大值抑制, 删除重叠过多的候选框
         keep_mask = torch.zeros_like(cls_pred, dtype = torch.bool) # (10000,) A boolean mask initialized to False values
-        keep_indices = torchvision.ops.nms(proposals, cls_pred, 0.7) # The indices of the proposals that survived non-maximum suppression
+        keep_indices = torchvision.ops.nms(proposals, cls_pred, config.RPN_NMS_THRESHOLD) # The indices of the proposals that survived non-maximum suppression
         
         # because of this ??
         keep_mask[keep_indices] = True
@@ -271,8 +275,8 @@ class RPN(torch.nn.Module):
         # we make a copy because later we need to add also the anchors with the best IOU with a gt box
         best_match_gt_idx_before_threshold = best_gt_for_anchor_idx.clone()
 
-        below_low_threshold = best_gt_for_anchor_score < 0.3 # a list of boolean values
-        between_thresholds = (best_gt_for_anchor_score >= 0.3) & (best_gt_for_anchor_score < 0.7)
+        below_low_threshold = best_gt_for_anchor_score < config.RPN_LOW_THRESHOLD # a list of boolean values
+        between_thresholds = (best_gt_for_anchor_score >= config.RPN_LOW_THRESHOLD) & (best_gt_for_anchor_score < config.RPN_HIGH_THRESHOLD)
         best_gt_for_anchor_idx[below_low_threshold] = -1
         best_gt_for_anchor_idx[between_thresholds] = -2
 
@@ -330,7 +334,7 @@ class RPN(torch.nn.Module):
 
         # reshape reg_pred from (batch_size = 1, 9*4, feature_map.height, feature_map.width) 
         # to ((batch_size = 1) * 9 * feature_map.height * feature_map.width, 4)
-        reg_pred = reg_pred.view(reg_pred.size(0),9,4,feature_map.shape[-2],feature_map.shape[-1]).permute(0, 3, 4, 1, 2).reshape(-1, 4)
+        reg_pred = reg_pred.view(reg_pred.size(0),self.anchor_number,4,feature_map.shape[-2],feature_map.shape[-1]).permute(0, 3, 4, 1, 2).reshape(-1, 4)
 
         # print("\n [in RPN] cls_pred.shape, reg_pred.shape", cls_pred.shape, reg_pred.shape)
         # apply regression to anchors, what we get is called proposals
@@ -357,7 +361,7 @@ class RPN(torch.nn.Module):
             regression_targets = get_regression(matched_gt_boxes_for_anchors.to(self.device), anchors.to(self.device))
 
             # for training, we don't use the entire set of anchors, but only some samples
-            sampled_pos_idx_mask, sampled_neg_idx_mask = sample_pos_neg(labels_for_anchors, positive_count=128, total_count=256)
+            sampled_pos_idx_mask, sampled_neg_idx_mask = sample_pos_neg(labels_for_anchors, positive_count=config.RPN_SAMPLE_POSITIVE_NUM, total_count=config.RPN_SAMPLE_TOTAL_NUM)
             # print the number of true values in the mask
             # print("\n [in RPN] torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask)",torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask))
             # return 2 tensors, each of size = size of labels_for_anchors, with 128 True in each that marks the positive / negative anchors to be used for training
@@ -390,11 +394,11 @@ class RPN(torch.nn.Module):
 class ROIhead(torch.nn.Module):
     def __init__(self, device):
         super(ROIhead, self).__init__()
-        self.in_channels = 512;
-        self.num_classes = 21;
-        self.pool_size = 7;
+        self.in_channels = config.ROI_IN_CHANNELS;
+        self.num_classes = config.ROI_CLASS_NUM;
+        self.pool_size = config.ROI_POOL_SIZE;
         # self.fc_dim = 1024; # fc stands for fully connected
-        self.fc_dim = 4096  # to match the dimensions of VGG fc6 and fc7 layers
+        self.fc_dim = config.ROI_FC_CHANNELS  # to match the dimensions of VGG fc6 and fc7 layers
     
         # # [TODO] cf. Fast RCNN 3.1. Truncated SVD for faster detection
         self.fc6 = torch.nn.Linear(self.in_channels * self.pool_size * self.pool_size, self.fc_dim)
@@ -416,9 +420,7 @@ class ROIhead(torch.nn.Module):
         torch.nn.init.constant_(self.reg_layer.bias, 0)
 
         self.device = device
-
-        self.threshold = 0.05
-        
+ 
     def assign_targets(self, proposals, gt_boxes, gt_labels):
 
         iou_matrix = get_iou(gt_boxes.to(self.device), proposals.to(self.device))
@@ -430,8 +432,8 @@ class ROIhead(torch.nn.Module):
         # As in [9], we take ... that have IoU overlap with a groundtruth bounding box of at least 0.5
         # fg_idx = best_gt_for_proposal_score >= 0.5
         # The lower threshold of 0.1 appears to act as a heuristic for hard example mining
-        bg_idx = (best_gt_for_proposal_score < 0.5) & (best_gt_for_proposal_score >= 0.1)
-        neither_idx = best_gt_for_proposal_score < 0.1
+        bg_idx = (best_gt_for_proposal_score < config.ROI_HIGH_THRESHOLD) & (best_gt_for_proposal_score >= config.ROI_LOW_THRESHOLD)
+        neither_idx = best_gt_for_proposal_score < config.ROI_LOW_THRESHOLD
 
         # we keep these negative, in order to use best_gt_for_proposal_idx 
         # which goes from 0 to maybe 20, to label the proposals
@@ -459,13 +461,13 @@ class ROIhead(torch.nn.Module):
     
     def filter_predictions(self, pred_boxes, pred_labels, pred_scores):
         # remove low score boxes
-        keep = torch.where(pred_scores > self.threshold)[0]
+        keep = torch.where(pred_scores > config.ROI_SCORE_THRESHOLD)[0]
         pred_boxes = pred_boxes[keep]
         pred_labels = pred_labels[keep]
         pred_scores = pred_scores[keep]
 
         # remove small boxes
-        min_size = 16
+        min_size = config.ROI_MIN_PROPOSAL_SIZE
         w = pred_boxes[:,2] - pred_boxes[:,0]
         h = pred_boxes[:,3] - pred_boxes[:,1]
         keep = torch.where((w >= min_size) & (h >= min_size))[0]
@@ -477,11 +479,11 @@ class ROIhead(torch.nn.Module):
         keep_mask = torch.zeros_like(pred_scores, dtype = torch.bool)
         for cls_id in torch.unique(pred_labels):
             curr_idx = torch.where(pred_labels == cls_id)[0]
-            curr_keep = torchvision.ops.nms(pred_boxes[curr_idx], pred_scores[curr_idx], 0.3)
+            curr_keep = torchvision.ops.nms(pred_boxes[curr_idx], pred_scores[curr_idx], config.ROI_NMS_THRESHOLD)
             keep_mask[curr_idx[curr_keep]] = True
         keep_idx = torch.where(keep_mask)[0]
         keep_idx_after_nms = keep_idx[pred_scores[keep_idx].sort(descending = True)[1]]
-        keep = keep_idx_after_nms[:100]
+        keep = keep_idx_after_nms[:config.ROI_NMS_TOP_N]
         pred_boxes = pred_boxes[keep]
         pred_labels = pred_labels[keep]
         pred_scores = pred_scores[keep]
@@ -503,7 +505,7 @@ class ROIhead(torch.nn.Module):
             # sampling 64 RoIs from each image. 
             # As in [9], we take 25% of the RoIs from object proposals 
             # that have IoU overlap with a groundtruth bounding box of at least 0.5.
-            sampled_pos_idx_mask, sampled_neg_idx_mask = sample_pos_neg(labels, positive_count=32, total_count=128)
+            sampled_pos_idx_mask, sampled_neg_idx_mask = sample_pos_neg(labels, positive_count=config.ROI_SAMPLE_POSITIVE_NUM, total_count=config.ROI_SAMPLE_TOTAL_NUM)
 
             # print sample length
             # print("\n [in ROI head] torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask)",torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask))
@@ -519,7 +521,7 @@ class ROIhead(torch.nn.Module):
         
         # ROI pooling (during inference for all proposals, during training for sampled 128 proposals)
         # spatial scale is needed, because the ROIs are defined in terms of original iamge coordinates
-        proposal_roi_pool_features = torchvision.ops.roi_pool(feature_map, [proposals], output_size = self.pool_size, spatial_scale = 1/16).flatten(start_dim = 1)
+        proposal_roi_pool_features = torchvision.ops.roi_pool(feature_map, [proposals], output_size = self.pool_size, spatial_scale = 1/config.FESTURE_MAP_STRIDE).flatten(start_dim = 1)
         # (sampled_training_proposals = 128, 512 * 7 * 7 = 25088)
         ROI_pooling_output = torch.nn.functional.relu(self.fc6(proposal_roi_pool_features))
         ROI_pooling_output = torch.nn.functional.relu(self.fc7(ROI_pooling_output))
@@ -603,8 +605,8 @@ class FasterRCNN(torch.nn.Module):
         self.image_std = torch.tensor([0.229, 0.224, 0.225])
 
         # image resizing parameters
-        self.min_size = 600
-        self.max_size = 1000
+        self.min_size = config.FRCNN_IMG_MIN_SIZE
+        self.max_size = config.FRCNN_IMG_MAX_SIZE
     
     def normalise_resize_img_and_boxes(self, img, bboxes):
         # normalise image

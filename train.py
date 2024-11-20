@@ -6,7 +6,6 @@ from torch.utils.data import DataLoader
 
 from dataset import voc
 from model.fasterRCNN import FasterRCNN
-import yaml
 
 import matplotlib.pyplot as plt
 
@@ -16,11 +15,9 @@ import numpy as np
 import random
 from infer import evaluate_map
 
+from config.config import config
 
 def train():
-    # Load the YAML configuration
-    # with open('config/voc.yaml', 'r') as file:
-    #     config = yaml.safe_load(file)
 
     device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 
@@ -66,8 +63,7 @@ def train():
     acc_steps = 1
     step_count = 1
 
-    # num_epochs = config['train_param']['num_epochs']
-    num_epochs = 20
+    num_epochs = config.TRAIN_EPOCHS_NUM
     for epoch in range(num_epochs):
         model.train()
         optimizer.zero_grad()
