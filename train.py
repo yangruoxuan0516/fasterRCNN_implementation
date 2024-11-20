@@ -161,7 +161,7 @@ def train():
 
 # train rpn + roihead
     for p in model.roi_head.parameters():
-        p.requires_grad = False
+        p.requires_grad = True
 
     optimizer = torch.optim.SGD(lr=0.001,
                                 params=filter(lambda p: p.requires_grad,
