@@ -223,16 +223,16 @@ class RPN(torch.nn.Module):
 
 
         if self.training:
-            prenms_topk = config.RPN_PRE_NMS_TOP_N_TRAIN
+            # prenms_topk = config.RPN_PRE_NMS_TOP_N_TRAIN
             topk = config.RPN_NMS_TOP_N_TRAIN
         else:
-            prenms_topk = config.RPN_PRE_NMS_TOP_N_TEST
+            # prenms_topk = config.RPN_PRE_NMS_TOP_N_TEST
             topk = config.RPN_NMS_TOP_N_TEST
 
-        _, top_n_idx = torch.topk(cls_pred, min(prenms_topk,len(cls_pred))) # (10000,)
-                                                   # topk returns (values, indices)
-        cls_pred = cls_pred[top_n_idx] # (10000,)
-        proposals = proposals[top_n_idx] # (10000, 4)
+        # _, top_n_idx = torch.topk(cls_pred, min(prenms_topk,len(cls_pred))) # (10000,)
+        #                                            # topk returns (values, indices)
+        # cls_pred = cls_pred[top_n_idx] # (10000,)
+        # proposals = proposals[top_n_idx] # (10000, 4)
 
         # if not self.training:
         #     # clamp the proposals
@@ -553,7 +553,7 @@ class ROIhead(torch.nn.Module):
                 beta = 1,
                 reduction = 'sum'
             # ) / labels.numel() 
-            ) / torch.sum(labels >= 0)
+            ) / torch.sum(labels > 0)
 
             frcnn_output['frcnn_classification_loss'] = classification_loss
             frcnn_output['frcnn_localization_loss'] = localization_loss
