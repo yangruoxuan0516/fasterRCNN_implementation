@@ -499,8 +499,8 @@ class ROIhead(torch.nn.Module):
 
     def forward(self, feature_map, proposals, image_shape, targets):
 
-        loc_normalize_mean = torch.tensor(config.REG_NOMALIZE_MEAN, dtype=torch.float32)
-        loc_normalize_std = torch.tensor(config.REG_NOMALIZE_STD, dtype=torch.float32)
+        loc_normalize_mean = torch.tensor(config.REG_NOMALIZE_MEAN, dtype=torch.float32, device=self.device)
+        loc_normalize_std = torch.tensor(config.REG_NOMALIZE_STD, dtype=torch.float32, device=self.device)
     
 
         if self.training and targets is not None:
