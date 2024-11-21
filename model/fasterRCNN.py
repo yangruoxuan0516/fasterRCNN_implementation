@@ -207,37 +207,25 @@ class RPN(torch.nn.Module):
 
         # if self.training:
         # choose only the proposals that doesn't cross the image boundary
-        img_height, img_width = img_shape
+        # img_height, img_width = img_shape
     
         # Create a mask for valid proposals
-        valid_mask = (
-            (proposals[:, 0] >= 0) &           # x1 >= 0
-            (proposals[:, 1] >= 0) &           # y1 >= 0
-            (proposals[:, 2] <= img_width) &   # x2 <= image width
-            (proposals[:, 3] <= img_height)    # y2 <= image height
-        )
+        # valid_mask = (
+        #     (proposals[:, 0] >= 0) &           # x1 >= 0
+        #     (proposals[:, 1] >= 0) &           # y1 >= 0
+        #     (proposals[:, 2] <= img_width) &   # x2 <= image width
+        #     (proposals[:, 3] <= img_height)    # y2 <= image height
+        # )
         
         # Apply the mask to filter proposals and class predictions
-        proposals = proposals[valid_mask]
-        cls_pred = cls_pred[valid_mask]
-
-
-        if self.training:
-            # prenms_topk = config.RPN_PRE_NMS_TOP_N_TRAIN
-            topk = config.RPN_NMS_TOP_N_TRAIN
-        else:
-            # prenms_topk = config.RPN_PRE_NMS_TOP_N_TEST
-            topk = config.RPN_NMS_TOP_N_TEST
-
-        # _, top_n_idx = torch.topk(cls_pred, min(prenms_topk,len(cls_pred))) # (10000,)
-        #                                            # topk returns (values, indices)
-        # cls_pred = cls_pred[top_n_idx] # (10000,)
-        # proposals = proposals[top_n_idx] # (10000, 4)
+        # proposals = proposals[valid_mask]
+        # cls_pred = cls_pred[valid_mask]
 
         # if not self.training:
         #     # clamp the proposals
         #     proposals = clamp_boxes(proposals, img_shape[-2:]) # (10000, 4)
         proposals = clamp_boxes(proposals, img_shape[-2:]) # (10000, 4)
+
 
         # remove the super small boxes, cf 知乎专栏
         min_size = config.RPN_MIN_PROPOSAL_SIZE
@@ -246,6 +234,20 @@ class RPN(torch.nn.Module):
         keep = torch.where(keep)[0]
         proposals = proposals[keep]
         cls_pred = cls_pred[keep]
+
+
+        if self.training:
+            prenms_topk = config.RPN_PRE_NMS_TOP_N_TRAIN
+            topk = config.RPN_NMS_TOP_N_TRAIN
+        else:
+            prenms_topk = config.RPN_PRE_NMS_TOP_N_TEST
+            topk = config.RPN_NMS_TOP_N_TEST
+
+        _, top_n_idx = torch.topk(cls_pred, min(prenms_topk,len(cls_pred))) # (10000,)
+                                                   # topk returns (values, indices)
+        cls_pred = cls_pred[top_n_idx] # (10000,)
+        proposals = proposals[top_n_idx] # (10000, 4)
+
 
         # NMS based on objectness score
         # Non-Maximum Suppression, 非极大值抑制, 删除重叠过多的候选框
@@ -496,6 +498,11 @@ class ROIhead(torch.nn.Module):
         return pred_boxes, pred_labels, pred_scores
 
     def forward(self, feature_map, proposals, image_shape, targets):
+
+        loc_normalize_mean = torch.tensor(config.REG_NOMALIZE_MEAN, dtype=torch.float32)
+        loc_normalize_std = torch.tensor(config.REG_NOMALIZE_STD, dtype=torch.float32)
+    
+
         if self.training and targets is not None:
             
             proposals = torch.cat([proposals, targets['bboxes'][0]], dim=0)
@@ -521,6 +528,9 @@ class ROIhead(torch.nn.Module):
             labels = labels[sampled_idx]
             matched_gt_boxes = matched_gt_boxes[sampled_idx]
             regression_targets = get_regression(matched_gt_boxes.to(self.device), proposals.to(self.device)) # (sampled_training_proposals, 4)
+
+
+            regression_targets = ((regression_targets - loc_normalize_mean) / loc_normalize_std)
             # by now we get the "reference" for trainging
             # labels and regression_targets
         
@@ -560,6 +570,8 @@ class ROIhead(torch.nn.Module):
         else:
             # print("\n [in ROIhead] cls_pred.shape, reg_pred.shape", cls_pred.shape, reg_pred.shape)
             # apply regression predictions to proposals
+            reg_pred = reg_pred * loc_normalize_std + loc_normalize_mean
+
             pred_boxes = apply_regression(reg_pred.to(self.device), proposals.to(self.device))
 
             pred_scores = torch.nn.functional.softmax(cls_pred, dim = -1)
