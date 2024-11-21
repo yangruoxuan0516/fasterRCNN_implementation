@@ -401,20 +401,20 @@ class RPN(torch.nn.Module):
 class ROIhead(torch.nn.Module):
     def __init__(self, device):
         super(ROIhead, self).__init__()
-        self.in_channels = config.ROI_IN_CHANNELS;
-        self.num_classes = config.ROI_CLASS_NUM;
-        self.pool_size = config.ROI_POOL_SIZE;
-        # self.fc_dim = 1024; # fc stands for fully connected
+        self.in_channels = config.ROI_IN_CHANNELS
+        self.num_classes = config.ROI_CLASS_NUM
+        self.pool_size = config.ROI_POOL_SIZE
+        # self.fc_dim = 1024  # fc stands for fully connected
         self.fc_dim = config.ROI_FC_CHANNELS  # to match the dimensions of VGG fc6 and fc7 layers
     
-        # # [TODO] cf. Fast RCNN 3.1. Truncated SVD for faster detection
-        self.fc6 = torch.nn.Linear(self.in_channels * self.pool_size * self.pool_size, self.fc_dim)
-        self.fc7 = torch.nn.Linear(self.fc_dim, self.fc_dim)
+        # # # [TODO] cf. Fast RCNN 3.1. Truncated SVD for faster detection
+        # self.fc6 = torch.nn.Linear(self.in_channels * self.pool_size * self.pool_size, self.fc_dim)
+        # self.fc7 = torch.nn.Linear(self.fc_dim, self.fc_dim)
 
         # Load pretrained VGG16 and extract fc6 and fc7
-        # vgg16 = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.IMAGENET1K_V1)
-        # self.fc6 = vgg16.classifier[0]  # Pretrained fc6 from VGG
-        # self.fc7 = vgg16.classifier[3]  # Pretrained fc7 from VGG
+        vgg16 = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.IMAGENET1K_V1)
+        self.fc6 = vgg16.classifier[0]  # Pretrained fc6 from VGG
+        self.fc7 = vgg16.classifier[3]  # Pretrained fc7 from VGG
 
         self.cls_layer = torch.nn.Linear(self.fc_dim, self.num_classes)
         self.reg_layer = torch.nn.Linear(self.fc_dim, self.num_classes * 4)

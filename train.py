@@ -36,7 +36,7 @@ def train():
                                               model.parameters()),
                                 weight_decay=5E-4,
                                 momentum=0.9)
-    scheduler = MultiStepLR(optimizer, milestones=[12,16], gamma=0.1)
+    scheduler = MultiStepLR(optimizer, milestones=[9,12], gamma=0.1)
     
     # save training result
     save_path = os.path.join(os.getcwd(), 'result/')
@@ -47,17 +47,17 @@ def train():
     losses_rpns = []  # Track RPN loss over time
     losses_frcnns = []  # Track FRCNN loss over time
 
-    avg_losses = []
-    avg_losses_rpns = []
-    avg_losses_frcnns = []
+    # avg_losses = []
+    # avg_losses_rpns = []
+    # avg_losses_frcnns = []
 
     # load dataset
     train_dataset = voc.VOCDataset(split='trainval')
     train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=4)
         
 
-    acc_steps = 1
-    step_count = 1
+    # acc_steps = 1
+    # step_count = 1
 
     num_epochs = config.TRAIN_EPOCHS_NUM
     for epoch in range(num_epochs):
@@ -88,18 +88,18 @@ def train():
             losses_rpns.append(rpn_loss.item())
             losses_frcnns.append(frcnn_loss.item())
 
-            loss = loss / acc_steps
+            # loss = loss / acc_steps
             loss.backward()
-            if step_count % acc_steps == 0:
-                optimizer.step()
-                optimizer.zero_grad()
-            step_count += 1
+            # if step_count % acc_steps == 0:
+            optimizer.step()
+            optimizer.zero_grad()
+            # step_count += 1
             
             train_bar.desc = "train epoch[{}/{}] loss:{:.3f}".format(epoch+1, num_epochs, loss)
 
         # print the mean loss of this epoch
-        optimizer.step()
-        optimizer.zero_grad()
+        # optimizer.step()
+        # optimizer.zero_grad()
         scheduler.step()
         loss_output = ''
         loss_output += 'Epoch: {}\n'.format(epoch)
@@ -108,21 +108,21 @@ def train():
         loss_output += 'FRCNN Loss: {}\n'.format(sum(losses_frcnns) / len(losses_frcnns))
         print(loss_output)
 
-        avg_losses.append(sum(losses) / len(losses))
-        avg_losses_rpns.append(sum(losses_rpns) / len(losses_rpns))
-        avg_losses_frcnns.append(sum(losses_frcnns) / len(losses_frcnns))
-        losses = []
-        losses_rpns = []
-        losses_frcnns = []
+        # avg_losses.append(sum(losses) / len(losses))
+        # avg_losses_rpns.append(sum(losses_rpns) / len(losses_rpns))
+        # avg_losses_frcnns.append(sum(losses_frcnns) / len(losses_frcnns))
+        # losses = []
+        # losses_rpns = []
+        # losses_frcnns = []
 
         # compute mAP every 3 epochs
-        if epoch % 3 == 0:
-            torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
-            evaluate_map()
+        # if epoch % 1 == 0:
+        torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
+        evaluate_map()
 
-    print("LOSSES: ", avg_losses)
-    print("LOSSES_RPNS: ", avg_losses_rpns)
-    print("LOSSES_FRCNNS: ", avg_losses_frcnns)
+    # print("LOSSES: ", avg_losses)
+    # print("LOSSES_RPNS: ", avg_losses_rpns)
+    # print("LOSSES_FRCNNS: ", avg_losses_frcnns)
 
     # save the model
     torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
