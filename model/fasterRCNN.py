@@ -142,7 +142,7 @@ class RPN(torch.nn.Module):
         
         # 1*1 conv layer with 18 filters, 18 = 2 (forground / background) * 9 (number of anchors)
         self.cls_layer = torch.nn.Conv2d(in_channels = config.RPN_CONV_CHANNELS, 
-                                    out_channels = self.anchor_number, 
+                                    out_channels = self.anchor_number * 2, 
                                     kernel_size = 1, 
                                     stride = 1, 
                                     padding = 0)
@@ -202,10 +202,10 @@ class RPN(torch.nn.Module):
         # cls_pred = cls_pred.reshape(-1,2) # ((batch_size = 1) * feature_map.height * feature_map.width * 9 * 2)
         # cls_pred = cls_pred[:,1]
         cls_pred = cls_pred.reshape(-1)
-        print("\n in filter_proposals, before sigmoid, cls_pred", cls_pred[:20])
-        cls_pred = torch.sigmoid(cls_pred) # ((batch_size = 1) * feature_map.height * feature_map.width * 9 * 2)
+        # print("\n in filter_proposals, before sigmoid, cls_pred", cls_pred[:20])
+        # cls_pred = torch.sigmoid(cls_pred) # ((batch_size = 1) * feature_map.height * feature_map.width * 9 * 2)
                                            # sigmoid is used to convert the output to a probability
-        print("\n in filter_proposals, after sigmoid, cls_pred", cls_pred[:20])
+        # print("\n in filter_proposals, after sigmoid, cls_pred", cls_pred[:20])
 
         # if self.training:
         # choose only the proposals that doesn't cross the image boundary
@@ -348,9 +348,15 @@ class RPN(torch.nn.Module):
                                                         # proposals are just anchors applied regressions here
 
         # filter proposals (handle cross)
-        print("in forward, before filter_proposals, cls_pred", cls_pred[:20])
-        proposals, scores = self.filter_proposals(proposals, cls_pred.detach(), img.shape[-2:])
-        print("in forward, after filter_proposals, cls_pred(used later in binary cross entropy)", cls_pred[:20])
+        # print("in forward, before filter_proposals, cls_pred", cls_pred[:20])
+
+        # 传入filter proposal的是经过softmax，然后选出foreground的分数
+        hh, ww = feature_map.shape[-2], feature_map.shape[-1]
+        cls_pred_softmax = torch.nn.functional.softmax(cls_pred.view(1,hh,ww,self.anchor_number,2), dim = 4)
+        cls_pred_fg = cls_pred_softmax[...,1].view(1,-1)
+        cls_pred = cls_pred.view(1,-1,2)
+        proposals, scores = self.filter_proposals(proposals, cls_pred_fg, img.shape[-2:])
+        # print("in forward, after filter_proposals, cls_pred(used later in binary cross entropy)", cls_pred[:20])
 
         rpn_output = {'proposals': proposals, 'scores': scores}
 
@@ -373,11 +379,12 @@ class RPN(torch.nn.Module):
             # return 2 tensors, each of size = size of labels_for_anchors, with 128 True in each that marks the positive / negative anchors to be used for training
             sampled_idx = torch.where(sampled_pos_idx_mask | sampled_neg_idx_mask)[0]
 
-            cls_loss = torch.nn.functional.binary_cross_entropy_with_logits(
-                cls_pred[sampled_idx].flatten(),
-                labels_for_anchors[sampled_idx].flatten(),
-            ) #/ sampled_idx.numel()
-            # log loss
+            # cls_loss = torch.nn.functional.binary_cross_entropy_with_logits(
+            #     cls_pred[sampled_idx].flatten(),
+            #     labels_for_anchors[sampled_idx].flatten(),
+            # ) #/ sampled_idx.numel()
+            # # log loss
+            cls_loss = torch.nn.functional.cross_entropy(cls_pred, labels_for_anchors, ignore_index = -1)
 
             # print("\n sampled_idx.numel()", sampled_idx.numel())
 
