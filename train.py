@@ -95,7 +95,7 @@ def train():
             optimizer.zero_grad()
             # step_count += 1
             
-            train_bar.desc = "train epoch[{}/{}] loss:{:.3f}".format(epoch+1, num_epochs, loss)
+            train_bar.desc = "train epoch[{}/{}] rpn cls{:.3f} loc{:.3f} roi cls{:.3f} loc{:.3f}".format(epoch+1, num_epochs, rpn_output['rpn_classification_loss'], rpn_output['rpn_localization_loss'], frcnn_output['frcnn_classification_loss'], frcnn_output['frcnn_localization_loss'])
 
         # print the mean loss of this epoch
         # optimizer.step()
