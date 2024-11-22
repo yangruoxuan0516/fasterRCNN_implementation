@@ -202,8 +202,10 @@ class RPN(torch.nn.Module):
         # cls_pred = cls_pred.reshape(-1,2) # ((batch_size = 1) * feature_map.height * feature_map.width * 9 * 2)
         # cls_pred = cls_pred[:,1]
         cls_pred = cls_pred.reshape(-1)
+        print("\n in filter_proposals, before sigmoid, cls_pred", cls_pred[:20])
         cls_pred = torch.sigmoid(cls_pred) # ((batch_size = 1) * feature_map.height * feature_map.width * 9 * 2)
                                            # sigmoid is used to convert the output to a probability
+        print("\n in filter_proposals, after sigmoid, cls_pred", cls_pred[:20])
 
         # if self.training:
         # choose only the proposals that doesn't cross the image boundary
@@ -346,7 +348,9 @@ class RPN(torch.nn.Module):
                                                         # proposals are just anchors applied regressions here
 
         # filter proposals (handle cross)
+        print("in forward, before filter_proposals, cls_pred", cls_pred[:20])
         proposals, scores = self.filter_proposals(proposals, cls_pred.detach(), img.shape[-2:])
+        print("in forward, after filter_proposals, cls_pred(used later in binary cross entropy)", cls_pred[:20])
 
         rpn_output = {'proposals': proposals, 'scores': scores}
 
