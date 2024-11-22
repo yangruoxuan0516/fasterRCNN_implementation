@@ -567,7 +567,7 @@ class ROIhead(torch.nn.Module):
             # print("\n labels.numel()", labels.numel())
 
             # compute localization only for non background 
-            fg_proposals_idx = torch.where(labels > 0)[0]
+            fg_proposals_idx = torch.where(labels >= 0)[0]
             # get class labels for them
             fg_cls_labels = labels[fg_proposals_idx].long()
             localization_loss = torch.nn.functional.smooth_l1_loss(
