@@ -21,12 +21,12 @@ def train():
 
     device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 
-    seed = 1111
-    torch.manual_seed(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-    if device == 'cuda:1':
-        torch.cuda.manual_seed_all(seed)
+    # seed = 1111
+    # torch.manual_seed(seed)
+    # np.random.seed(seed)
+    # random.seed(seed)
+    # if device == 'cuda:1':
+    #     torch.cuda.manual_seed_all(seed)
 
 
     model = FasterRCNN(device).to(device)
