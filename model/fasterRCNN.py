@@ -365,7 +365,7 @@ class RPN(torch.nn.Module):
             # for training, we don't use the entire set of anchors, but only some samples
             sampled_pos_idx_mask, sampled_neg_idx_mask = sample_pos_neg(labels_for_anchors, positive_count=config.RPN_SAMPLE_POSITIVE_NUM, total_count=config.RPN_SAMPLE_TOTAL_NUM)
             # print the number of true values in the mask
-            # print("\n [in RPN] torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask)",torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask))
+            print("\n [in RPN] torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask)",torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask))
             # return 2 tensors, each of size = size of labels_for_anchors, with 128 True in each that marks the positive / negative anchors to be used for training
             sampled_idx = torch.where(sampled_pos_idx_mask | sampled_neg_idx_mask)[0]
 
@@ -520,7 +520,7 @@ class ROIhead(torch.nn.Module):
             sampled_pos_idx_mask, sampled_neg_idx_mask = sample_pos_neg(labels, positive_count=config.ROI_SAMPLE_POSITIVE_NUM, total_count=config.ROI_SAMPLE_TOTAL_NUM)
 
             # print sample length
-            # print("\n [in ROI head] torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask)",torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask))
+            print("\n [in ROI head] torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask)",torch.sum(sampled_pos_idx_mask), torch.sum(sampled_neg_idx_mask))
 
 
             sampled_idx = torch.where(sampled_pos_idx_mask | sampled_neg_idx_mask)[0]
