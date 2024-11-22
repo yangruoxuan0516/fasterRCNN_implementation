@@ -387,7 +387,7 @@ class RPN(torch.nn.Module):
 
             print("cls_pred.shape, labels_for_anchors.shape", cls_pred.shape, labels_for_anchors.shape)
             print("labels type", labels_for_anchors.dtype)
-            cls_loss = torch.nn.functional.cross_entropy(cls_pred, labels_for_anchors, ignore_index = -1)
+            cls_loss = torch.nn.functional.cross_entropy(cls_pred, labels_for_anchors.long(), ignore_index = -1)
 
             # print("\n sampled_idx.numel()", sampled_idx.numel())
 
