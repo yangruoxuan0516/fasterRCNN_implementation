@@ -354,7 +354,7 @@ class RPN(torch.nn.Module):
         hh, ww = feature_map.shape[-2], feature_map.shape[-1]
         cls_pred_softmax = torch.nn.functional.softmax(cls_pred.view(1,hh,ww,self.anchor_number,2), dim = 4)
         cls_pred_fg = cls_pred_softmax[...,1].view(1,-1)
-        cls_pred = cls_pred.view(1,-1,2)
+        cls_pred = cls_pred.view(-1,2)
         proposals, scores = self.filter_proposals(proposals, cls_pred_fg, img.shape[-2:])
         # print("in forward, after filter_proposals, cls_pred(used later in binary cross entropy)", cls_pred[:20])
 
@@ -384,6 +384,9 @@ class RPN(torch.nn.Module):
             #     labels_for_anchors[sampled_idx].flatten(),
             # ) #/ sampled_idx.numel()
             # # log loss
+
+            print("cls_pred.shape, labels_for_anchors.shape", cls_pred.shape, labels_for_anchors.shape)
+            print("labels type", labels_for_anchors.dtype)
             cls_loss = torch.nn.functional.cross_entropy(cls_pred, labels_for_anchors, ignore_index = -1)
 
             # print("\n sampled_idx.numel()", sampled_idx.numel())
