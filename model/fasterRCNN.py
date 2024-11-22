@@ -385,8 +385,8 @@ class RPN(torch.nn.Module):
             # ) #/ sampled_idx.numel()
             # # log loss
 
-            print("cls_pred.shape", cls_pred.shape, "content", cls_pred[:20])
-            print("labels_for_anchors.shape", labels_for_anchors.shape, "content", labels_for_anchors[:20])
+            # print("cls_pred.shape", cls_pred.shape, "content", cls_pred[:20])
+            # print("labels_for_anchors.shape", labels_for_anchors.shape, "content", labels_for_anchors[:20])
             # print("labels type", labels_for_anchors.dtype)
 
             cls_pred = cls_pred[sampled_idx].view(-1,2)
