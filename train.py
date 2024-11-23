@@ -119,19 +119,24 @@ def train():
 
         # compute mAP every 3 epochs
         # if epoch % 1 == 0:
-        # torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
+
+        
+
         if epoch == 0:
             torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
             best_map = evaluate_map()
+            torch.save(model.state_dict(), os.path.join(save_path, 'best_model.pth'))
+            
         else:
+            torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
             map = evaluate_map()
 
             if map > best_map:
                 best_map = map
-                torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
+                torch.save(model.state_dict(), os.path.join(save_path, 'best_model.pth'))
 
         if epoch == 9:
-            model.load_state_dict(torch.load(os.path.join(save_path, 'model.pth')))
+            model.load_state_dict(torch.load(os.path.join(save_path, 'best_model.pth')))
             optimizer = torch.optim.SGD(lr=0.0001,
                                         params=filter(lambda p: p.requires_grad,
                                                     model.parameters()),

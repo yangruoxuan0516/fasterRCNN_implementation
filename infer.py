@@ -215,12 +215,12 @@ def load_model_and_dataset():
     ########################
     
     
-    seed = 1111
-    torch.manual_seed(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-    if device == 'cuda:1':
-        torch.cuda.manual_seed_all(seed)
+    # seed = 1111
+    # torch.manual_seed(seed)
+    # np.random.seed(seed)
+    # random.seed(seed)
+    # if device == 'cuda:1':
+    #     torch.cuda.manual_seed_all(seed)
     
     voc = VOCDataset(split='test')
     test_dataset = DataLoader(voc, batch_size=1, shuffle=False)
