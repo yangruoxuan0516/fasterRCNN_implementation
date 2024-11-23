@@ -36,7 +36,7 @@ def train():
                                               model.parameters()),
                                 weight_decay=5E-4,
                                 momentum=0.9)
-    scheduler = MultiStepLR(optimizer, milestones=[9,12], gamma=0.1)
+    # scheduler = MultiStepLR(optimizer, milestones=[9,12], gamma=0.1)
     
     # save training result
     save_path = os.path.join(os.getcwd(), 'result/')
@@ -58,6 +58,8 @@ def train():
 
     # acc_steps = 1
     # step_count = 1
+
+    best_map = 0.0
 
     num_epochs = config.TRAIN_EPOCHS_NUM
     for epoch in range(num_epochs):
@@ -100,7 +102,7 @@ def train():
         # print the mean loss of this epoch
         # optimizer.step()
         # optimizer.zero_grad()
-        scheduler.step()
+        # scheduler.step()
         loss_output = ''
         loss_output += 'Epoch: {}\n'.format(epoch)
         loss_output += 'Loss: {}\n'.format(sum(losses) / len(losses))
@@ -117,8 +119,21 @@ def train():
 
         # compute mAP every 3 epochs
         # if epoch % 1 == 0:
-        torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
-        evaluate_map()
+        # torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
+        map = evaluate_map()
+        if map > best_map:
+            best_map = map
+            torch.save(model.state_dict(), os.path.join(save_path, 'best_model.pth'))
+
+        if epoch == 9:
+            model.load_state_dict(torch.load(os.path.join(save_path, 'best_model.pth')))
+            optimizer = torch.optim.SGD(lr=0.0001,
+                                        params=filter(lambda p: p.requires_grad,
+                                                    model.parameters()),
+                                        weight_decay=5E-4,
+                                        momentum=0.9)
+
+
 
     # print("LOSSES: ", avg_losses)
     # print("LOSSES_RPNS: ", avg_losses_rpns)

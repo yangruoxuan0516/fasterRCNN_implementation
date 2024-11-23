@@ -715,6 +715,8 @@ def evaluate_map():
         iou_thresh=0.5, use_07_metric=False)
     print(return_dic)
 
+    return return_dic['map']
+
 
 if __name__ == '__main__':
     # parser = argparse.ArgumentParser(description='Arguments for faster rcnn inference')
