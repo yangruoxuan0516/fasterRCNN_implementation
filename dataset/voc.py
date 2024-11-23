@@ -43,17 +43,17 @@ VOC2007-trainval
 '''
 
 class VOCDataset(Dataset):
-    # def __init__(self, data_path='/Users/ruox/Documents/master/FasterRCNN/', split='trainval'):
-    def __init__(self, data_path='/home/infres/ryang-23/FasterRCNN-PyTorch', split='trainval'):
+    def __init__(self, data_path='/Users/ruox/Documents/master/FasterRCNN/', split='trainval'):
+    # def __init__(self, data_path='/home/infres/ryang-23/FasterRCNN-PyTorch', split='trainval'):
         # set pathes
         if split == 'trainval':
             self.split = 'trainval'
-            # data_path = os.path.join(data_path, 'VOC2007-trainval')
-            data_path = os.path.join(data_path, 'VOC2007')
+            data_path = os.path.join(data_path, 'VOC2007-trainval')
+            # data_path = os.path.join(data_path, 'VOC2007')
         elif split == 'test':
             self.split = 'test'
             data_path = os.path.join(data_path, 'VOC2007-test')
-        # data_path = os.path.join(data_path, 'VOC2007')
+        data_path = os.path.join(data_path, 'VOC2007')
         self.data_path = data_path
         self.annopath = os.path.join(self.data_path, 'Annotations', '%s.xml')
         self.imgpath = os.path.join(self.data_path, 'JPEGImages', '%s.jpg')
@@ -83,14 +83,15 @@ class VOCDataset(Dataset):
             # get targets (pairs of label and bbox)
             targets = list()
             for obj in annotation.findall('object'):
-                target = dict()
-                target['label'] = self.label2idx[obj.find('name').text]
-                bbox = [int(obj.find('bndbox/xmin').text) - 1,
-                        int(obj.find('bndbox/ymin').text) - 1,
-                        int(obj.find('bndbox/xmax').text) - 1,
-                        int(obj.find('bndbox/ymax').text) - 1]
-                target['bbox'] = bbox
-                targets.append(target)
+                if obj.find('difficult').text == '0':
+                    target = dict()
+                    target['label'] = self.label2idx[obj.find('name').text]
+                    bbox = [int(obj.find('bndbox/xmin').text) - 1,
+                            int(obj.find('bndbox/ymin').text) - 1,
+                            int(obj.find('bndbox/xmax').text) - 1,
+                            int(obj.find('bndbox/ymax').text) - 1]
+                    target['bbox'] = bbox
+                    targets.append(target)
             img_annotation['targets'] = targets
             # get image size
             size = annotation.find('size')
@@ -130,5 +131,6 @@ class VOCDataset(Dataset):
                 x1 = im_w - x1 - w
                 x2 = x1 + w
                 targets['bboxes'][idx] = torch.as_tensor([x1, y1, x2, y2])
+
 
         return img_id, img, targets
