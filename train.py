@@ -65,7 +65,7 @@ def train():
     for epoch in range(num_epochs):
         model.train()
         optimizer.zero_grad()
-        train_bar = tqdm.tqdm(train_loader, file = sys.stdout, ncols=100)
+        train_bar = tqdm.tqdm(train_loader, file = sys.stdout, ncols=200)
         for one_batch in train_bar:
 
             # get a new batch, which is a single pair of image and target here
@@ -123,10 +123,10 @@ def train():
         map = evaluate_map()
         if map > best_map:
             best_map = map
-            torch.save(model.state_dict(), os.path.join(save_path, 'best_model.pth'))
+            torch.save(model.state_dict(), os.path.join(save_path, 'model.pth'))
 
         if epoch == 9:
-            model.load_state_dict(torch.load(os.path.join(save_path, 'best_model.pth')))
+            model.load_state_dict(torch.load(os.path.join(save_path, 'model.pth')))
             optimizer = torch.optim.SGD(lr=0.0001,
                                         params=filter(lambda p: p.requires_grad,
                                                     model.parameters()),
