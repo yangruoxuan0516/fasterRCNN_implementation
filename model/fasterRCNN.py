@@ -655,23 +655,28 @@ class FasterRCNN(torch.nn.Module):
         #     transforms.Normalize(mean=[103.939, 116.779, 123.68], std=[1.0, 1.0, 1.0]),  # Normalize for Caffe
         # ])
 
+        self.image_mean = torch.tensor([103.939, 116.779, 123.68])
+        self.image_std = torch.tensor([1.0, 1.0, 1.0])
+
         # image resizing parameters
         self.min_size = config.FRCNN_IMG_MIN_SIZE
         self.max_size = config.FRCNN_IMG_MAX_SIZE
     
     def normalise_resize_img_and_boxes(self, img, bboxes):
         # normalise image
-        # mean = torch.as_tensor(self.image_mean, dtype = img.dtype, device = img.device)
-        # std = torch.as_tensor(self.image_std, dtype = img.dtype, device = img.device)
+        mean = torch.as_tensor(self.image_mean, dtype = img.dtype, device = img.device)
+        std = torch.as_tensor(self.image_std, dtype = img.dtype, device = img.device)
         # img = (img - mean[:, None, None]) / std[:, None, None]
         # img = transforms.ToTensor()(img) * 255
         img = img * 255
         # img = self.transform(img)
         img = img[[2, 1, 0], ...]
         # Subtract the Caffe mean (values in [0, 255] range)
-        mean = torch.tensor([103.939, 116.779, 123.68]).view(3, 1, 1).to(self.device)
-        img = img - mean
+        # mean = torch.tensor([103.939, 116.779, 123.68]).view(3, 1, 1).to(self.device)
+        # img = img - mean
         # img = img.unsqueeze(0)
+        img = (img - mean[:, None, None]) / std[:, None, None]
+
 
         # resize image
         h, w = img.shape[-2:]
