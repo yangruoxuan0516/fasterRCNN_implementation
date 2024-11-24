@@ -664,7 +664,8 @@ class FasterRCNN(torch.nn.Module):
         # mean = torch.as_tensor(self.image_mean, dtype = img.dtype, device = img.device)
         # std = torch.as_tensor(self.image_std, dtype = img.dtype, device = img.device)
         # img = (img - mean[:, None, None]) / std[:, None, None]
-        img = transforms.ToTensor()(img) * 255
+        # img = transforms.ToTensor()(img) * 255
+        img = img * 255
         img = self.transform(img)
         # img = img.unsqueeze(0)
 
