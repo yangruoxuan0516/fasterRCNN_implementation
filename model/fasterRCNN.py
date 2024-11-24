@@ -655,8 +655,8 @@ class FasterRCNN(torch.nn.Module):
         #     transforms.Normalize(mean=[103.939, 116.779, 123.68], std=[1.0, 1.0, 1.0]),  # Normalize for Caffe
         # ])
 
-        # self.image_mean = torch.tensor([103.939, 116.779, 123.68])
-        self.image_mean = torch.tensor([122.7717, 115.9465, 102.9801])
+        self.image_mean = torch.tensor([103.939, 116.779, 123.68])
+        # self.image_mean = torch.tensor([122.7717, 115.9465, 102.9801])
         self.image_std = torch.tensor([1.0, 1.0, 1.0])
 
         # image resizing parameters
