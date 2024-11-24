@@ -652,7 +652,7 @@ class FasterRCNN(torch.nn.Module):
         # self.image_std = torch.tensor([0.229, 0.224, 0.225])
         self.transform = transforms.Compose([
             transforms.Lambda(lambda x: x[[2, 1, 0], ...]),  # Convert RGB to BGR
-            transforms.Normalize(mean=[103.939, 116.779, 123.68], std=[1, 1, 1]),  # Normalize for Caffe
+            transforms.Normalize(mean=[103.939, 116.779, 123.68], std=[1.0, 1.0, 1.0]),  # Normalize for Caffe
         ])
 
         # image resizing parameters
