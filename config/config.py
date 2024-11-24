@@ -60,6 +60,7 @@ class CONFIG:
     REG_NOMALIZE_MEAN = [0.0, 0.0, 0.0, 0.0]
     REG_NOMALIZE_STD = [0.1, 0.1, 0.2, 0.2]
 
+    BACKBONE_PATH = '/home/infres/ryang-23/fasterRCNN_implementation/backbone/vgg16_caffe.pth'
 
     
 
