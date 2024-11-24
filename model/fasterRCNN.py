@@ -671,6 +671,7 @@ class FasterRCNN(torch.nn.Module):
         img = img * 255
         # img = self.transform(img)
         # img = img[[2, 1, 0], ...]
+        img = img[:, [2, 1, 0], :, :]
         # Subtract the Caffe mean (values in [0, 255] range)
         # mean = torch.tensor([103.939, 116.779, 123.68]).view(3, 1, 1).to(self.device)
         # img = img - mean
