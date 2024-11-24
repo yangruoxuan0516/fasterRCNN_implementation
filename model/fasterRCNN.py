@@ -6,6 +6,8 @@ import torchvision
 
 import math
 
+from torchvision.transforms import transforms
+
 from config.config import config
 
 def get_iou(boxes1,boxes2):
@@ -430,7 +432,10 @@ class ROIhead(torch.nn.Module):
         # self.fc7 = torch.nn.Linear(self.fc_dim, self.fc_dim)
 
         # Load pretrained VGG16 and extract fc6 and fc7
-        vgg16 = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.IMAGENET1K_V1)
+        # vgg16 = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.IMAGENET1K_V1)
+        vgg16 = torchvision.models.vgg16(weights=None)  # No weights loaded initially
+        state_dict = torch.load('../backbone/vgg16_caffe.pth')  # Your converted .pth file
+        vgg16.load_state_dict(state_dict, strict=False)  # Load the weights to the model  
         self.fc6 = vgg16.classifier[0]  # Pretrained fc6 from VGG
         self.fc7 = vgg16.classifier[3]  # Pretrained fc7 from VGG
 
@@ -627,7 +632,12 @@ class FasterRCNN(torch.nn.Module):
         self.device = device
 
         # load models
-        vgg16 = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.IMAGENET1K_V1)
+        # vgg16 = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.IMAGENET1K_V1)
+        vgg16 = torchvision.models.vgg16(weights=None)  # No weights loaded initially
+        state_dict = torch.load('../backbone/vgg16_caffe.pth')  # Your converted .pth file
+        vgg16.load_state_dict(state_dict, strict=False)  # Load the weights to the model
+        vgg16 = vgg16.to(device)        
+
         self.backbone = vgg16.features[:-1]
         self.rpn = RPN(device=self.device)
         self.roi_head = ROIhead(device=self.device)
@@ -638,8 +648,12 @@ class FasterRCNN(torch.nn.Module):
                 param.requires_grad = False
 
         # image normalisation parameters
-        self.image_mean = torch.tensor([0.485, 0.456, 0.406])
-        self.image_std = torch.tensor([0.229, 0.224, 0.225])
+        # self.image_mean = torch.tensor([0.485, 0.456, 0.406])
+        # self.image_std = torch.tensor([0.229, 0.224, 0.225])
+        self.transform = transforms.Compose([
+            transforms.Lambda(lambda x: x[[2, 1, 0], ...]),  # Convert RGB to BGR
+            transforms.Normalize(mean=[103.939, 116.779, 123.68], std=[1, 1, 1]),  # Normalize for Caffe
+        ])
 
         # image resizing parameters
         self.min_size = config.FRCNN_IMG_MIN_SIZE
@@ -647,9 +661,12 @@ class FasterRCNN(torch.nn.Module):
     
     def normalise_resize_img_and_boxes(self, img, bboxes):
         # normalise image
-        mean = torch.as_tensor(self.image_mean, dtype = img.dtype, device = img.device)
-        std = torch.as_tensor(self.image_std, dtype = img.dtype, device = img.device)
-        img = (img - mean[:, None, None]) / std[:, None, None]
+        # mean = torch.as_tensor(self.image_mean, dtype = img.dtype, device = img.device)
+        # std = torch.as_tensor(self.image_std, dtype = img.dtype, device = img.device)
+        # img = (img - mean[:, None, None]) / std[:, None, None]
+        img = self.transform.ToTensor()(img) * 255
+        img = self.transform(img)
+        # img = img.unsqueeze(0)
 
         # resize image
         h, w = img.shape[-2:]
