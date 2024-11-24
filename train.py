@@ -19,7 +19,7 @@ from config.config import config
 
 def train():
 
-    device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
 
     # seed = 1111
     # torch.manual_seed(seed)

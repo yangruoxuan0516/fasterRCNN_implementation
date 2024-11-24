@@ -83,7 +83,7 @@ class VOCDataset(Dataset):
             # get targets (pairs of label and bbox)
             targets = list()
             for obj in annotation.findall('object'):
-                if obj.find('difficult').text == '0':
+                if split == 'trainval':
                     target = dict()
                     target['label'] = self.label2idx[obj.find('name').text]
                     bbox = [int(obj.find('bndbox/xmin').text) - 1,
@@ -92,6 +92,16 @@ class VOCDataset(Dataset):
                             int(obj.find('bndbox/ymax').text) - 1]
                     target['bbox'] = bbox
                     targets.append(target)
+                elif split == 'test':
+                    if obj.find('difficult').text == '0':
+                        target = dict()
+                        target['label'] = self.label2idx[obj.find('name').text]
+                        bbox = [int(obj.find('bndbox/xmin').text) - 1,
+                                int(obj.find('bndbox/ymin').text) - 1,
+                                int(obj.find('bndbox/xmax').text) - 1,
+                                int(obj.find('bndbox/ymax').text) - 1]
+                        target['bbox'] = bbox
+                        targets.append(target)
             img_annotation['targets'] = targets
             # get image size
             size = annotation.find('size')
