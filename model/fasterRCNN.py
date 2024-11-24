@@ -677,6 +677,8 @@ class FasterRCNN(torch.nn.Module):
         # img = img.unsqueeze(0)
         img = (img - mean[:, None, None]) / std[:, None, None]
 
+        print("\n img.shape", img.shape)
+
 
         # resize image
         h, w = img.shape[-2:]
