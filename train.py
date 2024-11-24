@@ -142,6 +142,14 @@ def train():
                                                     model.parameters()),
                                         weight_decay=5E-4,
                                         momentum=0.9)
+            
+        if epoch == 14:
+            model.load_state_dict(torch.load(os.path.join(save_path, 'best_model.pth')))
+            optimizer = torch.optim.SGD(lr=0.00001,
+                                        params=filter(lambda p: p.requires_grad,
+                                                    model.parameters()),
+                                        weight_decay=5E-4,
+                                        momentum=0.9)
 
 
 
