@@ -1,3 +1,5 @@
 .DS_Store
 *.pyc
 backbone/
+result/
+suivi.ipynb
