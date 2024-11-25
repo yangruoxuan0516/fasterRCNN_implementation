@@ -57,7 +57,7 @@ def train():
     for epoch in range(num_epochs):
         model.train()
         optimizer.zero_grad()
-        train_bar = tqdm.tqdm(train_loader, file = sys.stdout, ncols=200)
+        train_bar = tqdm.tqdm(train_loader, file = sys.stdout, ncols=150)
         for one_batch in train_bar:
 
             # get a new batch, which is a single pair of image and target here
