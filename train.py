@@ -19,15 +19,7 @@ from config.config import config
 
 def train():
 
-    device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
-
-    # seed = 1111
-    # torch.manual_seed(seed)
-    # np.random.seed(seed)
-    # random.seed(seed)
-    # if device == 'cuda:1':
-    #     torch.cuda.manual_seed_all(seed)
-
+    device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 
     model = FasterRCNN(device).to(device)
     # optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.001)

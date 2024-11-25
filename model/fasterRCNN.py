@@ -650,13 +650,9 @@ class FasterRCNN(torch.nn.Module):
         # image normalisation parameters
         # self.image_mean = torch.tensor([0.485, 0.456, 0.406])
         # self.image_std = torch.tensor([0.229, 0.224, 0.225])
-        # self.transform = transforms.Compose([
-        #     transforms.Lambda(lambda x: x[[2, 1, 0], ...]),  # Convert RGB to BGR
-        #     transforms.Normalize(mean=[103.939, 116.779, 123.68], std=[1.0, 1.0, 1.0]),  # Normalize for Caffe
-        # ])
 
-        self.image_mean = torch.tensor([103.939, 116.779, 123.68])
-        # self.image_mean = torch.tensor([122.7717, 115.9465, 102.9801])
+        # self.image_mean = torch.tensor([103.939, 116.779, 123.68])
+        self.image_mean = torch.tensor([102.9801, 115.9465, 122.7717])
         self.image_std = torch.tensor([1.0, 1.0, 1.0])
 
         # image resizing parameters
@@ -667,20 +663,9 @@ class FasterRCNN(torch.nn.Module):
         # normalise image
         mean = torch.as_tensor(self.image_mean, dtype = img.dtype, device = img.device)
         std = torch.as_tensor(self.image_std, dtype = img.dtype, device = img.device)
-        # img = (img - mean[:, None, None]) / std[:, None, None]
-        # img = transforms.ToTensor()(img) * 255
         img = img * 255
-        # img = self.transform(img)
-        # img = img[[2, 1, 0], ...]
         img = img[:, [2, 1, 0], :, :]
-        # Subtract the Caffe mean (values in [0, 255] range)
-        # mean = torch.tensor([103.939, 116.779, 123.68]).view(3, 1, 1).to(self.device)
-        # img = img - mean
-        # img = img.unsqueeze(0)
         img = (img - mean[:, None, None]) / std[:, None, None]
-
-        # print("\n img.shape", img.shape)
-
 
         # resize image
         h, w = img.shape[-2:]
@@ -724,59 +709,6 @@ class FasterRCNN(torch.nn.Module):
         boxes = torch.stack((x_min, y_min, x_max, y_max), dim = 1)
         return boxes
 
-    '''
-    def draw_proposals_on_image(self, img, proposals, target_boxes, string, id_img):
-        classes = [
-            'person', 'bird', 'cat', 'cow', 'dog', 'horse', 'sheep',
-            'aeroplane', 'bicycle', 'boat', 'bus', 'car', 'motorbike', 'train',
-            'bottle', 'chair', 'diningtable', 'pottedplant', 'sofa', 'tvmonitor'
-        ]
-        classes = sorted(classes)
-        classes = ['background'] + classes
-        idx2label = {idx: classes[idx] for idx in range(len(classes))}
-
-        bboxes = proposals['bboxes'].cpu().detach().numpy()
-        scores = proposals['scores'].cpu().detach().numpy()
-        labels = proposals['labels'].cpu().detach().numpy()
-
-        # Convert the tensor image to numpy (if it's normalized, you may want to denormalize it first)
-        img_np = img.squeeze().permute(1, 2, 0).cpu().numpy()
-
-        # Plot the image
-        fig, ax = plt.subplots(1)
-        ax.imshow(img_np)
-
-    # Check if proposals are empty
-        if proposals['bboxes'].numel() > 0:
-            # Loop through each proposal and add it to the plot
-            for i in range(len(bboxes)):
-                x1, y1, x2, y2 = bboxes[i]
-                width = x2 - x1
-                height = y2 - y1
-                rect = patches.Rectangle((x1, y1), width, height, linewidth=1, edgecolor='r', facecolor='none')
-                ax.add_patch(rect)
-                # Add the score and label to the plot
-                ax.text(x1, y1, f'{idx2label[labels[i]]} {scores[i]:.2f}', color='r')
-
-        else:
-            print("No proposals to display")
-
-        # Check if target_boxes are empty
-        # print("target_boxes",target_boxes)
-        if target_boxes.numel() > 0:
-            target_boxes = target_boxes.squeeze(dim=0)
-            for box in target_boxes:
-                x1, y1, x2, y2 = box.cpu().numpy()
-                width = x2 - x1
-                height = y2 - y1
-                rect = patches.Rectangle((x1, y1), width, height, linewidth=2, edgecolor='g', facecolor='none')
-                ax.add_patch(rect)
-        else:
-            print("No target boxes to display")
-
-        plt.savefig(string+str(id_img[0])+".png")
-        plt.close(fig)
-    '''
 
     def forward(self, img, targets = None, img_id = 0):
         old_shape = img.shape[-2:]
