@@ -261,16 +261,16 @@ def infer():
 
         # Saving images with ground truth boxes
         for idx, box in enumerate(target['bboxes']):
-            x1, y1, x2, y2 = box.detach().cpu().numpy()
+            x1, y1, x2, y2 = box.detach().to(device).numpy()
             x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
             
             cv2.rectangle(gt_im, (x1, y1), (x2, y2), thickness=2, color=[0, 255, 0])
             cv2.rectangle(gt_im_copy, (x1, y1), (x2, y2), thickness=2, color=[0, 255, 0])
-            text = voc.idx2label[target['labels'][idx].detach().cpu().item()]
+            text = voc.idx2label[target['labels'][idx].detach().to(device).item()]
             text_size, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_PLAIN, 1, 1)
             text_w, text_h = text_size
             cv2.rectangle(gt_im_copy , (x1, y1), (x1 + 10+text_w, y1 + 10+text_h), [255, 255, 255], -1)
-            cv2.putText(gt_im, text=voc.idx2label[target['labels'][idx].detach().cpu().item()],
+            cv2.putText(gt_im, text=voc.idx2label[target['labels'][idx].detach().to(device).item()],
                         org=(x1+5, y1+15),
                         thickness=1,
                         fontScale=1,
@@ -295,12 +295,12 @@ def infer():
         
         # Saving images with predicted boxes
         for idx, box in enumerate(boxes):
-            x1, y1, x2, y2 = box.detach().cpu().numpy()
+            x1, y1, x2, y2 = box.detach().to(device).numpy()
             x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
             cv2.rectangle(im, (x1, y1), (x2, y2), thickness=2, color=[0, 0, 255])
             cv2.rectangle(im_copy, (x1, y1), (x2, y2), thickness=2, color=[0, 0, 255])
-            text = '{} : {:.2f}'.format(voc.idx2label[labels[idx].detach().cpu().item()],
-                                        scores[idx].detach().cpu().item())
+            text = '{} : {:.2f}'.format(voc.idx2label[labels[idx].detach().to(device).item()],
+                                        scores[idx].detach().to(device).item())
             text_size, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_PLAIN, 1, 1)
             text_w, text_h = text_size
             cv2.rectangle(im_copy , (x1, y1), (x1 + 10+text_w, y1 + 10+text_h), [255, 255, 255], -1)
@@ -675,11 +675,11 @@ def evaluate_map(use_best=False):
         labels = frcnn_output['labels']
         scores = frcnn_output['scores']
         
-        pred_bboxes.append(boxes.cpu().numpy())
-        pred_labels.append(labels.cpu().numpy())
-        pred_scores.append(scores.cpu().numpy())
-        gt_bboxes.append(target_boxes.cpu().numpy())
-        gt_labels.append(target_labels.cpu().numpy())
+        pred_bboxes.append(boxes.to(device).numpy())
+        pred_labels.append(labels.to(device).numpy())
+        pred_scores.append(scores.to(device).numpy())
+        gt_bboxes.append(target_boxes.to(device).numpy())
+        gt_labels.append(target_labels.to(device).numpy())
 
 
         pred_boxes = {}
@@ -689,14 +689,14 @@ def evaluate_map(use_best=False):
             gt_boxes[label_name] = []
         
         for idx, box in enumerate(boxes):
-            x1, y1, x2, y2 = box.detach().cpu().numpy()
-            label = labels[idx].detach().cpu().item()
-            score = scores[idx].detach().cpu().item()
+            x1, y1, x2, y2 = box.detach().to(device).numpy()
+            label = labels[idx].detach().to(device).item()
+            score = scores[idx].detach().to(device).item()
             label_name = voc.idx2label[label]
             pred_boxes[label_name].append([x1, y1, x2, y2, score])
         for idx, box in enumerate(target_boxes):
-            x1, y1, x2, y2 = box.detach().cpu().numpy()
-            label = target_labels[idx].detach().cpu().item()
+            x1, y1, x2, y2 = box.detach().to(device).numpy()
+            label = target_labels[idx].detach().to(device).item()
             label_name = voc.idx2label[label]
             gt_boxes[label_name].append([x1, y1, x2, y2])
         
