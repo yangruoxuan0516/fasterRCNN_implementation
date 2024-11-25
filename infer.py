@@ -204,7 +204,7 @@ def compute_map(det_boxes, gt_boxes, iou_threshold=0.5, method='area'):
 
 
 
-def load_model_and_dataset():
+def load_model_and_dataset(use_best):
     # # Read the config file #
     # with open(args.config_path, 'r') as file:
     #     try:
@@ -231,6 +231,9 @@ def load_model_and_dataset():
     # faster_rcnn_model.load_state_dict(torch.load('/home/infres/ryang-23/fasterRCNN_implementation/result/model.pth',
     faster_rcnn_model.load_state_dict(torch.load('result/model.pth',
                                                  map_location=device))
+    if use_best:
+        faster_rcnn_model.load_state_dict(torch.load('result/best_model.pth',
+                                                     map_location=device))
     return faster_rcnn_model, voc, test_dataset
 
 
@@ -641,8 +644,8 @@ def calc_detection_voc_ap(prec, rec, use_07_metric=False):
 
 
 
-def evaluate_map():
-    faster_rcnn_model, voc, test_dataset = load_model_and_dataset()
+def evaluate_map(use_best=False):
+    faster_rcnn_model, voc, test_dataset = load_model_and_dataset(use_best)
 
     # faster_rcnn_model.roi_head.threshold = 0.7
 
@@ -736,7 +739,7 @@ if __name__ == '__main__':
     #     evaluate_map(args)
     # else:
     #     print('Not Evaluating as `evaluate` argument is False')
-    evaluate_map()
+    evaluate_map(use_best=True)
     # infer()
 
 
