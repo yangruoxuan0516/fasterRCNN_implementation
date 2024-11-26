@@ -7,7 +7,7 @@ class CONFIG:
 
     RPN_CONV_CHANNELS = 512
 
-    FESTURE_MAP_STRIDE = 16 # after vgg backbone
+    FESTURE_MAP_STRIDE = 32 # after vgg backbone
 
     RPN_CENTRALIZE_ANCHORS = True
 
@@ -39,7 +39,7 @@ class CONFIG:
     ROI_LOW_THRESHOLD = 0.1
     ROI_SCORE_THRESHOLD = 0.05
 
-    ROI_MIN_PROPOSAL_SIZE = 16
+    ROI_MIN_PROPOSAL_SIZE = 32
 
     ROI_NMS_THRESHOLD = 0.3
 
@@ -61,9 +61,6 @@ class CONFIG:
     REG_NOMALIZE_STD = [0.1, 0.1, 0.2, 0.2]
 
     BACKBONE_PATH = '/home/infres/ryang-23/fasterRCNN_implementation/backbone/vgg16_caffe.pth'
-
-    
-
 
 
 
