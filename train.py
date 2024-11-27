@@ -55,7 +55,7 @@ def train():
 
     num_epochs = config.TRAIN_EPOCHS_NUM
     for epoch in range(num_epochs):
-        print("\n======Epoch: ", epoch, "======")
+        print("\n======Epoch: ", epoch+1, "======")
         model.train()
         optimizer.zero_grad()
         train_bar = tqdm.tqdm(train_loader, file = sys.stdout, ncols=120)
@@ -97,7 +97,7 @@ def train():
         # optimizer.zero_grad()
         # scheduler.step()
         loss_output = ''
-        loss_output += 'Epoch: {}\n'.format(epoch)
+        loss_output += 'Epoch: {}\n'.format(epoch+1)
         loss_output += 'Loss: {}\n'.format(sum(losses) / len(losses))
         loss_output += 'RPN Loss: {}\n'.format(sum(losses_rpns) / len(losses_rpns))
         loss_output += 'FRCNN Loss: {}\n'.format(sum(losses_frcnns) / len(losses_frcnns))
