@@ -319,6 +319,23 @@ class RPN(torch.nn.Module):
         # later for classification we pick labels which have >= 0
         return labels, matched_gt_boxes
     
+    def keep_inside(self, anchors, cls_pred, reg_pred, img_shape):
+        img_height, img_width = img_shape
+    
+        # Create a mask for valid proposals
+        valid_mask = (
+            (anchors[:, 0] >= 0) &           # x1 >= 0
+            (anchors[:, 1] >= 0) &           # y1 >= 0
+            (anchors[:, 2] <= img_width) &   # x2 <= image width
+            (anchors[:, 3] <= img_height)    # y2 <= image height
+        )
+        
+        # Apply the mask to filter proposals and class predictions
+        proposals = proposals[valid_mask]
+        cls_pred = cls_pred[valid_mask]
+        reg_pred = reg_pred[valid_mask]
+
+        return anchors, cls_pred, reg_pred
 
     def forward(self, img, feature_map, targets):
 
@@ -366,6 +383,10 @@ class RPN(torch.nn.Module):
             return rpn_output
         else:
             # in training
+
+            # use only anchors that are inside the image for rpn training
+            anchors, cls_pred, reg_pred = self.keep_inside(anchors, cls_pred, reg_pred, img.shape[-2:])
+
             # assign ground truth boxe and label to each anchor
             labels_for_anchors, matched_gt_boxes_for_anchors = self.assign_targets(anchors, targets['bboxes'][0])
 
