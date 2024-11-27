@@ -716,7 +716,7 @@ def evaluate_map(use_best=False):
         pred_bboxes, pred_labels, pred_scores, gt_bboxes, gt_labels,
         gt_difficults=None,
         iou_thresh=0.5, use_07_metric=False)
-    print(return_dic)
+    print("map:",return_dic['map'])
 
     return return_dic['map']
 

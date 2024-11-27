@@ -55,9 +55,10 @@ def train():
 
     num_epochs = config.TRAIN_EPOCHS_NUM
     for epoch in range(num_epochs):
+        print("\n======Epoch: ", epoch, "======")
         model.train()
         optimizer.zero_grad()
-        train_bar = tqdm.tqdm(train_loader, file = sys.stdout, ncols=150)
+        train_bar = tqdm.tqdm(train_loader, file = sys.stdout, ncols=120)
         for one_batch in train_bar:
 
             # get a new batch, which is a single pair of image and target here
@@ -137,7 +138,7 @@ def train():
             
         if epoch == 14:
             model.load_state_dict(torch.load(os.path.join(save_path, 'best_model.pth')))
-            optimizer = torch.optim.SGD(lr=0.00001,
+            optimizer = torch.optim.SGD(lr=0.00002,
                                         params=filter(lambda p: p.requires_grad,
                                                     model.parameters()),
                                         weight_decay=5E-4,

@@ -648,11 +648,11 @@ class FasterRCNN(torch.nn.Module):
                 param.requires_grad = False
 
         # image normalisation parameters
-        self.image_mean = torch.tensor([0.485, 0.456, 0.406])
-        self.image_std = torch.tensor([0.229, 0.224, 0.225])
+        # self.image_mean = torch.tensor([0.485, 0.456, 0.406])
+        # self.image_std = torch.tensor([0.229, 0.224, 0.225])
 
-        # self.image_mean = torch.tensor([103.939, 116.779, 123.68])
-        # self.image_std = torch.tensor([1.0, 1.0, 1.0])
+        self.image_mean = torch.tensor([103.939, 116.779, 123.68])
+        self.image_std = torch.tensor([1.0, 1.0, 1.0])
 
         # image resizing parameters
         self.min_size = config.FRCNN_IMG_MIN_SIZE
@@ -662,8 +662,8 @@ class FasterRCNN(torch.nn.Module):
         # normalise image
         mean = torch.as_tensor(self.image_mean, dtype = img.dtype, device = img.device)
         std = torch.as_tensor(self.image_std, dtype = img.dtype, device = img.device)
-        # img = img * 255
-        # img = img[:, [2, 1, 0], :, :]
+        img = img * 255
+        img = img[:, [2, 1, 0], :, :]
         img = (img - mean[:, None, None]) / std[:, None, None]
 
         # resize image
