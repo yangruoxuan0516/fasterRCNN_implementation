@@ -331,7 +331,7 @@ class RPN(torch.nn.Module):
         )
         
         # Apply the mask to filter proposals and class predictions
-        proposals = proposals[valid_mask]
+        anchors = anchors[valid_mask]
         cls_pred = cls_pred[valid_mask]
         reg_pred = reg_pred[valid_mask]
 
