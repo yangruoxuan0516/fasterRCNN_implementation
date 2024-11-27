@@ -432,10 +432,10 @@ class ROIhead(torch.nn.Module):
         # self.fc7 = torch.nn.Linear(self.fc_dim, self.fc_dim)
 
         # Load pretrained VGG16 and extract fc6 and fc7
-        vgg16 = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.IMAGENET1K_V1)
-        # vgg16 = torchvision.models.vgg16(weights=None)  # No weights loaded initially
-        # state_dict = torch.load(config.BACKBONE_PATH)  # Your converted .pth file
-        # vgg16.load_state_dict(state_dict, strict=False)  # Load the weights to the model  
+        # vgg16 = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.IMAGENET1K_V1)
+        vgg16 = torchvision.models.vgg16(weights=None)  # No weights loaded initially
+        state_dict = torch.load(config.BACKBONE_PATH)  # Your converted .pth file
+        vgg16.load_state_dict(state_dict, strict=False)  # Load the weights to the model  
         self.fc6 = vgg16.classifier[0]  # Pretrained fc6 from VGG
         self.fc7 = vgg16.classifier[3]  # Pretrained fc7 from VGG
 
@@ -632,10 +632,10 @@ class FasterRCNN(torch.nn.Module):
         self.device = device
 
         # load models
-        vgg16 = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.IMAGENET1K_V1)
-        # vgg16 = torchvision.models.vgg16(weights=None)  # No weights loaded initially
-        # state_dict = torch.load(config.BACKBONE_PATH)  # Your converted .pth file
-        # vgg16.load_state_dict(state_dict, strict=False)  # Load the weights to the model
+        # vgg16 = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.IMAGENET1K_V1)
+        vgg16 = torchvision.models.vgg16(weights=None)  # No weights loaded initially
+        state_dict = torch.load(config.BACKBONE_PATH)  # Your converted .pth file
+        vgg16.load_state_dict(state_dict, strict=False)  # Load the weights to the model
         vgg16 = vgg16.to(device)        
 
         self.backbone = vgg16.features[:-1]
