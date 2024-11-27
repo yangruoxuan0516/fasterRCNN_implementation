@@ -128,7 +128,7 @@ def train():
                 best_map = map
                 torch.save(model.state_dict(), os.path.join(save_path, 'best_model.pth'))
 
-        if epoch == 9:
+        if epoch == 12:
             model.load_state_dict(torch.load(os.path.join(save_path, 'best_model.pth')))
             optimizer = torch.optim.SGD(lr=0.0001,
                                         params=filter(lambda p: p.requires_grad,
@@ -136,9 +136,9 @@ def train():
                                         weight_decay=5E-4,
                                         momentum=0.9)
             
-        if epoch == 14:
+        if epoch == 18:
             model.load_state_dict(torch.load(os.path.join(save_path, 'best_model.pth')))
-            optimizer = torch.optim.SGD(lr=0.00002,
+            optimizer = torch.optim.SGD(lr=0.000005,
                                         params=filter(lambda p: p.requires_grad,
                                                     model.parameters()),
                                         weight_decay=5E-4,
