@@ -603,8 +603,8 @@ class ROIhead(torch.nn.Module):
             localization_loss = torch.nn.functional.smooth_l1_loss(
                 reg_pred[fg_proposals_idx, fg_cls_labels],
                 regression_targets[fg_proposals_idx],
-                # beta = 1/9,
-                beta = 1,
+                beta = 1/9,
+                # beta = 1,
                 reduction = 'sum'
             # ) / labels.numel() 
             ) / torch.sum(labels >= 0)
