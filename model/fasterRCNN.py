@@ -385,7 +385,7 @@ class RPN(torch.nn.Module):
             # in training
 
             # use only anchors that are inside the image for rpn training
-            anchors, cls_pred, reg_pred = self.keep_inside(anchors, cls_pred, reg_pred, img.shape[-2:])
+            # anchors, cls_pred, reg_pred = self.keep_inside(anchors, cls_pred, reg_pred, img.shape[-2:])
 
             # assign ground truth boxe and label to each anchor
             labels_for_anchors, matched_gt_boxes_for_anchors = self.assign_targets(anchors, targets['bboxes'][0])
@@ -603,8 +603,8 @@ class ROIhead(torch.nn.Module):
             localization_loss = torch.nn.functional.smooth_l1_loss(
                 reg_pred[fg_proposals_idx, fg_cls_labels],
                 regression_targets[fg_proposals_idx],
-                beta = 1/9,
-                # beta = 1,
+                # beta = 1/9,
+                beta = 1,
                 reduction = 'sum'
             # ) / labels.numel() 
             ) / torch.sum(labels >= 0)
