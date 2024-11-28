@@ -607,7 +607,7 @@ class ROIhead(torch.nn.Module):
                 beta = 1,
                 reduction = 'sum'
             # ) / labels.numel() 
-            ) / torch.sum(labels > 0) / 10
+            ) / torch.sum(labels >= 0)
 
             frcnn_output['frcnn_classification_loss'] = classification_loss
             frcnn_output['frcnn_localization_loss'] = localization_loss
