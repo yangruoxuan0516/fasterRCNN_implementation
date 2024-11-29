@@ -147,7 +147,7 @@ def train():
             #                             weight_decay=5E-4,
             #                             momentum=0.9)
             params = []
-            for key, value in dict(model.named_parameters().items()):
+            for key, value in dict(model.named_parameters()).items():
                 if value.requires_grad:
                     if 'bias' in key:
                         params += [{'params': [value], 'lr': 0.0001 * 2, 'weight_decay': 0}]
