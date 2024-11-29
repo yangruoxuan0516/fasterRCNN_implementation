@@ -32,7 +32,7 @@ def train():
     # scheduler = MultiStepLR(optimizer, milestones=[9,12], gamma=0.1)
     
     params = []
-    for key, value in dict(model.named_parameters().items()):
+    for key, value in dict(model.named_parameters()).items():
         if value.requires_grad:
             if 'bias' in key:
                 params + [{'params': [value], 'lr': 0.001 * 2, 'weight_decay': 0}]
