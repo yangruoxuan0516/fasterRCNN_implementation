@@ -466,7 +466,7 @@ class ROIhead(torch.nn.Module):
         if not config.USE_DROP_OUT:
             del classifier[5]
             del classifier[2]
-        classifier = torch.nn.Sequential(*classifier)
+        self.classifier = torch.nn.Sequential(*classifier)
 
         self.cls_layer = torch.nn.Linear(self.fc_dim, self.num_classes)
         self.reg_layer = torch.nn.Linear(self.fc_dim, self.num_classes * 4)
@@ -590,8 +590,9 @@ class ROIhead(torch.nn.Module):
         # spatial scale is needed, because the ROIs are defined in terms of original iamge coordinates
         proposal_roi_pool_features = torchvision.ops.roi_pool(feature_map, [proposals], output_size = self.pool_size, spatial_scale = 1/config.FESTURE_MAP_STRIDE).flatten(start_dim = 1)
         # (sampled_training_proposals = 128, 512 * 7 * 7 = 25088)
-        ROI_pooling_output = torch.nn.functional.relu(self.fc6(proposal_roi_pool_features))
-        ROI_pooling_output = torch.nn.functional.relu(self.fc7(ROI_pooling_output))
+        # ROI_pooling_output = torch.nn.functional.relu(self.fc6(proposal_roi_pool_features))
+        # ROI_pooling_output = torch.nn.functional.relu(self.fc7(ROI_pooling_output))
+        ROI_pooling_output = self.classifier(proposal_roi_pool_features)
         cls_pred = self.cls_layer(ROI_pooling_output) # (sampled_training_proposals = 128, 21)
         reg_pred = self.reg_layer(ROI_pooling_output) # (sampled_training_proposals = 128, 21 * 4 = 84)
 
