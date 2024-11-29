@@ -385,7 +385,7 @@ class RPN(torch.nn.Module):
             # in training
 
             # use only anchors that are inside the image for rpn training
-            # anchors, cls_pred, reg_pred = self.keep_inside(anchors, cls_pred, reg_pred, img.shape[-2:])
+            anchors, cls_pred, reg_pred = self.keep_inside(anchors, cls_pred, reg_pred, img.shape[-2:])
 
             # assign ground truth boxe and label to each anchor
             labels_for_anchors, matched_gt_boxes_for_anchors = self.assign_targets(anchors, targets['bboxes'][0])
@@ -456,9 +456,17 @@ class ROIhead(torch.nn.Module):
         # vgg16 = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.IMAGENET1K_V1)
         vgg16 = torchvision.models.vgg16(weights=None)  # No weights loaded initially
         state_dict = torch.load(config.BACKBONE_PATH)  # Your converted .pth file
-        vgg16.load_state_dict(state_dict, strict=False)  # Load the weights to the model  
-        self.fc6 = vgg16.classifier[0]  # Pretrained fc6 from VGG
-        self.fc7 = vgg16.classifier[3]  # Pretrained fc7 from VGG
+        vgg16.load_state_dict(state_dict)  # Load the weights to the model  
+        # self.fc6 = vgg16.classifier[0]  # Pretrained fc6 from VGG
+        # self.fc7 = vgg16.classifier[3]  # Pretrained fc7 from VGG
+        
+        classifier = vgg16.classifier
+        classifier = list(classifier)
+        del classifier[6]
+        if not config.USE_DROP_OUT:
+            del classifier[5]
+            del classifier[2]
+        classifier = torch.nn.Sequential(*classifier)
 
         self.cls_layer = torch.nn.Linear(self.fc_dim, self.num_classes)
         self.reg_layer = torch.nn.Linear(self.fc_dim, self.num_classes * 4)
@@ -656,7 +664,7 @@ class FasterRCNN(torch.nn.Module):
         # vgg16 = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.IMAGENET1K_V1)
         vgg16 = torchvision.models.vgg16(weights=None)  # No weights loaded initially
         state_dict = torch.load(config.BACKBONE_PATH)  # Your converted .pth file
-        vgg16.load_state_dict(state_dict, strict=False)  # Load the weights to the model
+        vgg16.load_state_dict(state_dict)  # Load the weights to the model
         vgg16 = vgg16.to(device)        
 
         self.backbone = vgg16.features[:-1]

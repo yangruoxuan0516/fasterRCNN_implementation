@@ -23,13 +23,24 @@ def train():
 
     model = FasterRCNN(device).to(device)
     # optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.001)
-    optimizer = torch.optim.SGD(lr=0.001,
-                                params=filter(lambda p: p.requires_grad,
-                                              model.parameters()),
-                                weight_decay=5E-4,
-                                momentum=0.9)
+
+    # optimizer = torch.optim.SGD(lr=0.001,
+    #                             params=filter(lambda p: p.requires_grad,
+    #                                           model.parameters()),
+    #                             weight_decay=5E-4,
+    #                             momentum=0.9)
     # scheduler = MultiStepLR(optimizer, milestones=[9,12], gamma=0.1)
     
+    params = []
+    for key, value in dict(model.named_parameters().items()):
+        if value.requires_grad:
+            if 'bias' in key:
+                params + [{'params': [value], 'lr': 0.001 * 2, 'weight_decay': 0}]
+            else:
+                params + [{'params': [value], 'lr': 0.001, 'weight_decay': 0.0005}]
+    optimizer = torch.optim.SGD(params, momentum=0.9)
+
+
     # save training result
     save_path = os.path.join(os.getcwd(), 'result/')
     if not os.path.exists(save_path):
@@ -130,11 +141,19 @@ def train():
 
         if epoch == 9:
             model.load_state_dict(torch.load(os.path.join(save_path, 'best_model.pth')))
-            optimizer = torch.optim.SGD(lr=0.0001,
-                                        params=filter(lambda p: p.requires_grad,
-                                                    model.parameters()),
-                                        weight_decay=5E-4,
-                                        momentum=0.9)
+            # optimizer = torch.optim.SGD(lr=0.0001,
+            #                             params=filter(lambda p: p.requires_grad,
+            #                                         model.parameters()),
+            #                             weight_decay=5E-4,
+            #                             momentum=0.9)
+            params = []
+            for key, value in dict(model.named_parameters().items()):
+                if value.requires_grad:
+                    if 'bias' in key:
+                        params + [{'params': [value], 'lr': 0.0001 * 2, 'weight_decay': 0}]
+                    else:
+                        params + [{'params': [value], 'lr': 0.0001, 'weight_decay': 0.0005}]
+            optimizer = torch.optim.SGD(params, momentum=0.9)
             
         if epoch == 14:
             break

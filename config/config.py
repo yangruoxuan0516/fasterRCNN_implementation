@@ -35,6 +35,8 @@ class CONFIG:
     ROI_POOL_SIZE = 7
     ROI_FC_CHANNELS = 4096
 
+    USE_DROP_OUT = False
+
     ROI_HIGH_THRESHOLD = 0.5
     ROI_LOW_THRESHOLD = 0.1
 
