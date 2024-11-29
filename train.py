@@ -35,9 +35,9 @@ def train():
     for key, value in dict(model.named_parameters()).items():
         if value.requires_grad:
             if 'bias' in key:
-                params + [{'params': [value], 'lr': 0.001 * 2, 'weight_decay': 0}]
+                params += [{'params': [value], 'lr': 0.001 * 2, 'weight_decay': 0}]
             else:
-                params + [{'params': [value], 'lr': 0.001, 'weight_decay': 0.0005}]
+                params += [{'params': [value], 'lr': 0.001, 'weight_decay': 0.0005}]
     optimizer = torch.optim.SGD(params, momentum=0.9)
 
 
@@ -150,9 +150,9 @@ def train():
             for key, value in dict(model.named_parameters().items()):
                 if value.requires_grad:
                     if 'bias' in key:
-                        params + [{'params': [value], 'lr': 0.0001 * 2, 'weight_decay': 0}]
+                        params += [{'params': [value], 'lr': 0.0001 * 2, 'weight_decay': 0}]
                     else:
-                        params + [{'params': [value], 'lr': 0.0001, 'weight_decay': 0.0005}]
+                        params += [{'params': [value], 'lr': 0.0001, 'weight_decay': 0.0005}]
             optimizer = torch.optim.SGD(params, momentum=0.9)
             
         if epoch == 14:
